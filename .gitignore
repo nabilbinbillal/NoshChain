@@ -36,11 +36,14 @@ Thumbs.db
 # AI assistants / agent tooling
 .cursor/
 .windsurf/
+.claude
 .claude/
 .copilot/
 .agents/
 agent-transcripts/
 **/COPILOT*.md
+AGENTS.md
+CLAUDE.md
 **/AGENTS.md
 **/CLAUDE.md
 **/.cursorrules
