@@ -1,0 +1,35 @@
+{
+  "name": "nosh-chain",
+  "version": "1.0.0",
+  "description": "A proof-of-work blockchain implementation in TypeScript with native NOSH currency",
+  "main": "src/node.ts",
+  "scripts": {
+    "node": "tsx src/node.ts",
+    "node2": "PORT=3002 PEER=http://localhost:3001 DATA_FILE=data/node2-chain.json tsx src/node.ts",
+    "mine": "tsx src/mine.ts",
+    "send": "tsx src/send-nosh.ts",
+    "balance": "tsx src/balance.ts",
+    "wallet": "tsx src/create-wallet.ts",
+    "check": "tsc --noEmit",
+    "test": "node --import tsx/esm --test src/tests/blockchain.test.ts src/tests/validation.test.ts src/tests/pow.test.ts src/tests/security.test.ts src/tests/consensus.test.ts src/tests/api.test.ts src/tests/monetary.test.ts src/tests/e2e.test.ts",
+    "test:unit": "node --import tsx/esm --test src/tests/validation.test.ts src/tests/blockchain.test.ts",
+    "test:e2e": "node --import tsx/esm --test src/tests/e2e.test.ts"
+  },
+  "keywords": [
+    "blockchain",
+    "cryptocurrency",
+    "typescript",
+    "secp256k1",
+    "proof-of-work"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.0"
+  }
+}

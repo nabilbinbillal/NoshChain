@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+
+# Wallet files (private keys)
+data/
+data/wallets/
+**/*.wallet.json
+
+# Blockchain runtime data
+data/*.json
+data/**/*.json
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa*
+credentials.json
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# AI assistants / agent tooling
+.cursor/
+.windsurf/
+.claude/
+.copilot/
+.agents/
+agent-transcripts/
+**/COPILOT*.md
+**/AGENTS.md
+**/CLAUDE.md
+**/.cursorrules
+**/.windsurfrules
+
+# Build output
+dist/
+build/
+.cache/
