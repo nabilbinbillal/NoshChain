@@ -325,8 +325,8 @@
   </div>
 
   <script>
-    const API_BASE = 'http://localhost:3001/api';
-    const ws = new WebSocket('ws://localhost:3001/ws');
+    const API_BASE = `http://${window.location.hostname}:3001/api`;
+    const ws = new WebSocket(`ws://${window.location.hostname}:3001/ws`);
 
     const elements = {
       blocks: document.getElementById('blocks'),
@@ -443,15 +443,15 @@
         if (data.uptime) elements.uptime.textContent = formatUptime(data.uptime);
       });
 
-      fetch('/api/blocks/latest').then(res => res.json()).then(data => {
+      fetch(`${API_BASE}/blocks/latest`).then(res => res.json()).then(data => {
         if (data.index) addBlockToList(data);
       });
 
-      fetch('/api/mempool').then(res => res.json()).then(data => {
+      fetch(`${API_BASE}/mempool`).then(res => res.json()).then(data => {
         if (data.total) elements.mempool.textContent = data.total;
       });
 
-      fetch('/api/peers').then(res => res.json()).then(data => {
+      fetch(`${API_BASE}/peers`).then(res => res.json()).then(data => {
         if (data.peers) elements.peers.textContent = data.peers.length;
       });
     });
