@@ -12,6 +12,7 @@ import {
   GENESIS_PREVIOUS_HASH,
   GENESIS_TIMESTAMP,
   MAX_FUTURE_BLOCK_TIME_MS,
+  MAX_BLOCK_DRIFT_MS,
 } from "./types.js";
 import { INITIAL_DIFFICULTY } from "./types.js";
 import {
@@ -49,7 +50,9 @@ export function validateFee(fee: string): boolean {
 }
 
 export function validateNonce(nonce: number): boolean {
-  return Number.isInteger(nonce) && nonce >= 0;
+  // Nonces are part of the signed consensus message.
+  // Unsafe JS integers can lose precision and create ambiguous values.
+  return Number.isSafeInteger(nonce) && nonce >= 0;
 }
 
 export function isSystemTransaction(tx: Transaction): boolean {
@@ -341,8 +344,24 @@ export function verifyBlock(
     return false;
   }
 
-  if (previous && block.timestamp < previous.timestamp) {
-    return false;
+  if (previous) {
+    if (block.timestamp < previous.timestamp) {
+      return false;
+    }
+
+    // Prevent miners from moving consensus time arbitrarily far into
+    // the future relative to the previous block. This also limits
+    // timestamp manipulation of difficulty-adjustment windows.
+    // Genesis is a fixed historical timestamp. The first live block
+    // may legitimately be mined years after genesis, so the normal
+    // inter-block drift limit starts from block 1 -> block 2.
+    if (
+      previous.index > 0 &&
+      block.timestamp - previous.timestamp >
+      MAX_BLOCK_DRIFT_MS
+    ) {
+      return false;
+    }
   }
 
   if (!meetsDifficulty(block.hash, block.difficulty)) {
