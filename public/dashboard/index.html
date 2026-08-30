@@ -1,489 +1,151 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NoshChain Explorer</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --nosh-gold: #D4AF37;
-      --nosh-gold-dark: #A68C2A;
-      --nosh-dark: #1A1A2E;
-      --nosh-mid: #16213E;
-      --nosh-accent: #E94560;
-      --text-primary: #F1F1F1;
-      --text-secondary: #B0B0B0;
-      --card-bg: #21262D;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--nosh-dark);
-      color: var(--text-primary);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    .app {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 2rem;
-    }
-
-    /* Header */
-    .header {
-      background: linear-gradient(135deg, var(--nosh-mid), var(--nosh-dark));
-      border: 1px solid var(--nosh-gold);
-      border-radius: 12px;
-      padding: 2rem;
-      margin-bottom: 2rem;
-    }
-
-    .header h1 {
-      font-size: 1.8rem;
-      background: linear-gradient(135deg, var(--text-primary), var(--nosh-gold));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 0.5rem;
-    }
-
-    .header p {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-    }
-
-    /* Stats Grid */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-
-    .stat-card {
-      background: var(--card-bg);
-      border: 1px solid var(--nosh-gold);
-      border-radius: 8px;
-      padding: 1.5rem;
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .stat-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 20px rgba(212, 175, 55, 0.15);
-    }
-
-    .stat-card .icon {
-      width: 40px;
-      height: 40px;
-      background: linear-gradient(135deg, var(--nosh-gold), var(--nosh-gold-dark));
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1rem;
-    }
-
-    .stat-card .icon svg {
-      width: 20px;
-      height: 20px;
-      fill: var(--nosh-dark);
-    }
-
-    .stat-card h3 {
-      font-size: 0.85rem;
-      color: var(--nosh-gold);
-      margin-bottom: 0.5rem;
-    }
-
-    .stat-card p {
-      font-size: 1.8rem;
-      font-weight: 600;
-      background: linear-gradient(135deg, var(--text-primary), var(--nosh-gold));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    /* Recent Blocks */
-    .recent-blocks {
-      background: var(--card-bg);
-      border: 1px solid var(--nosh-gold);
-      border-radius: 8px;
-      padding: 1.5rem;
-      margin-bottom: 2rem;
-    }
-
-    .recent-blocks h2 {
-      font-size: 1.2rem;
-      color: var(--nosh-gold);
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .block-list {
-      max-height: 300px;
-      overflow-y: auto;
-    }
-
-    .block-list::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .block-list::-webkit-scrollbar-thumb {
-      background: var(--nosh-gold);
-      border-radius: 3px;
-    }
-
-    .block-item {
-      padding: 0.75rem 0;
-      border-bottom: 1px solid var(--nosh-mid);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .block-item:last-child {
-      border-bottom: none;
-    }
-
-    .block-item .height {
-      color: var(--nosh-gold);
-      font-weight: 500;
-    }
-
-    .block-item .hash {
-      color: var(--text-secondary);
-      font-size: 0.75rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 120px;
-    }
-
-    /* Mempool */
-    .mempool-card {
-      background: var(--card-bg);
-      border: 1px solid var(--nosh-gold);
-      border-radius: 8px;
-      padding: 1.5rem;
-    }
-
-    .mempool-card h2 {
-      font-size: 1.2rem;
-      color: var(--nosh-gold);
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .tx-item {
-      padding: 0.5rem 0;
-      border-bottom: 1px solid var(--nosh-mid);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.85rem;
-    }
-
-    .tx-item:last-child {
-      border-bottom: none;
-    }
-
-    .tx-item .hash {
-      color: var(--nosh-gold);
-      font-weight: 500;
-      max-width: 100px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .tx-item .amount {
-      color: var(--nosh-gold-dark);
-    }
-
-    /* Connections */
-    .connections-card {
-      background: var(--card-bg);
-      border: 1px solid var(--nosh-gold);
-      border-radius: 8px;
-      padding: 1.5rem;
-    }
-
-    .connections-card h2 {
-      font-size: 1.2rem;
-      color: var(--nosh-gold);
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .peer-item {
-      padding: 0.5rem 0;
-      border-bottom: 1px solid var(--nosh-mid);
-      font-size: 0.85rem;
-    }
-
-    .peer-item:last-child {
-      border-bottom: none;
-    }
-
-    .peer-item span {
-      color: var(--nosh-gold);
-    }
-
-    /* Responsive */
-    @media (max-width: 640px) {
-      .app {
-        padding: 1rem;
-      }
-
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NoshChain — Premium Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--gold:#D4AF37;--gold2:#F0D060;--bg:#0B0E14;--card:#151821;--card2:#1C2030;--border:#252A3C;--text:#E6E8EC;--muted:#8B8FA3;--green:#0ECB81;--red:#F6465D}
+body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.mono{font-family:'JetBrains Mono',monospace}
+.topbar{position:sticky;top:0;z-index:50;background:rgba(11,14,20,.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:12px;font-weight:800;font-size:18px;letter-spacing:-.5px}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 16px rgba(212,175,55,.3)}
+.nav{display:flex;gap:4px;background:var(--card);padding:4px;border-radius:10px;border:1px solid var(--border)}
+.nav button{background:transparent;border:0;color:var(--muted);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:.2s}
+.nav button.active{background:var(--gold);color:#0B0E14;font-weight:600}
+.live{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);border:1px solid var(--border);padding:6px 12px;border-radius:20px;background:var(--card)}
+.dot{width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.wrap{max-width:1280px;margin:0 auto;padding:24px}
+.hero{background:linear-gradient(135deg,#151821 0%,#1C2030 50%,#1A1F33 100%);border:1px solid var(--border);border-radius:16px;padding:28px;position:relative;overflow:hidden;margin-bottom:24px}
+.hero::before{content:'';position:absolute;top:-50%;right:-30%;width:600px;height:600px;background:radial-gradient(circle,rgba(212,175,55,.08),transparent 70%);pointer-events:none}
+.hero h1{font-size:28px;font-weight:800;letter-spacing:-1px;margin-bottom:6px}
+.hero h1 span{background:linear-gradient(135deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{color:var(--muted);font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;position:relative;overflow:hidden}
+.stat::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.3}
+.stat label{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.stat strong{font-size:26px;font-weight:800;display:block;margin:6px 0 2px}
+.stat small{font-size:12px;color:var(--muted)}
+.stat.gold strong{color:var(--gold)}
+.grid2{display:grid;grid-template-columns:1.4fr .8fr;gap:16px;margin-bottom:24px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.card head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border);font-weight:600;font-size:13px}
+.card head span{color:var(--muted);font-weight:400;font-size:12px;cursor:pointer}
+.card body{display:block;padding:0}
+.row{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid rgba(37,42,60,.5);font-size:13px;transition:.15s}
+.row:last-child{border:0}
+.row:hover{background:rgba(212,175,55,.04)}
+.badge{font-size:11px;padding:3px 8px;border-radius:20px;font-weight:600}
+.badge-green{background:rgba(14,203,129,.12);color:var(--green);border:1px solid rgba(14,203,129,.2)}
+.badge-gold{background:rgba(212,175,55,.12);color:var(--gold);border:1px solid rgba(212,175,55,.2)}
+.input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:8px;font-size:13px;outline:none}
+.input:focus{border-color:var(--gold)}
+.btn{background:var(--gold);color:#0B0E14;border:0;padding:10px 16px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+.hash{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);cursor:pointer}
+.page{display:none}.page.active{display:block}
+.wallet-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.wallet-grid{grid-template-columns:1fr}.nav{overflow-x:auto}}
+</style>
 </head>
 <body>
-  <div class="app">
-    <header class="header">
-      <h1>🪙 NoshChain Explorer</h1>
-      <p>Real-time blockchain monitoring</p>
-    </header>
-
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="icon">
-          <svg viewBox="0 0 24 24"><path d="M12 7v2m0 4l-3 3m3-3v2m0-4l3-3m-3 3v2"/></svg>
-        </div>
-        <h3>Blocks</h3>
-        <p id="blocks">--</p>
-      </div>
-
-      <div class="stat-card">
-        <div class="icon">
-          <svg viewBox="0 0 24 24"><path d="M12 15V3m0 4l-3 3m3-3v2m0-4l3-3m-3 3v2"/></svg>
-        </div>
-        <h3>Peers</h3>
-        <p id="peers">--</p>
-      </div>
-
-      <div class="stat-card">
-        <div class="icon">
-          <svg viewBox="0 0 24 24"><path d="M12 9v2m0 4l3 3m3-3v2m0-4l3-3m-3 3v2"/></svg>
-        </div>
-        <h3>Mempool</h3>
-        <p id="mempool">--</p>
-      </div>
-
-      <div class="stat-card">
-        <div class="icon">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>
-        </div>
-        <h3>Uptime</h3>
-        <p id="uptime">--</p>
-      </div>
-    </div>
-
-    <section class="recent-blocks">
-      <h2>🔗 Latest Blocks</h2>
-      <div class="block-list" id="block-list">
-        <p style="color: var(--text-secondary); padding: 1rem;">Loading...</p>
-      </div>
-    </section>
-
-    <section class="mempool-card">
-      <h2>📦 Mempool</h2>
-      <div class="tx-list" id="tx-list">
-        <p style="color: var(--text-secondary); padding: 1rem;">Loading...</p>
-      </div>
-    </section>
-
-    <section class="connections-card">
-      <h2>🌐 Peers</h2>
-      <div class="peer-list" id="peer-list">
-        <p style="color: var(--text-secondary); padding: 1rem;">Loading...</p>
-      </div>
-    </section>
+<div class="topbar">
+  <div class="logo"><div class="logo-icon">◆</div> NoshChain</div>
+  <div class="nav" id="nav">
+    <button class="active" data-p="dashboard">Dashboard</button>
+    <button data-p="blocks">Blocks</button>
+    <button data-p="txs">Transactions</button>
+    <button data-p="wallets">Wallets</button>
+    <button data-p="tokens">Tokens</button>
+    <button data-p="network">Network</button>
   </div>
-
-  <script>
-    const API_BASE = `http://${window.location.hostname}:3001/api`;
-    const ws = new WebSocket(`ws://${window.location.hostname}:3001/ws`);
-
-    const elements = {
-      blocks: document.getElementById('blocks'),
-      peers: document.getElementById('peers'),
-      mempool: document.getElementById('mempool'),
-      uptime: document.getElementById('uptime'),
-      blockList: document.getElementById('block-list'),
-      txList: document.getElementById('tx-list'),
-      peerList: document.getElementById('peer-list')
-    };
-
-    let wsConnected = false;
-
-    ws.onopen = () => {
-      wsConnected = true;
-      ws.send(JSON.stringify({ type: 'subscribe', channels: ['blocks', 'transactions', 'all'] }));
-    };
-
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      updateFromWebSocket(data);
-    };
-
-    ws.onclose = () => {
-      wsConnected = false;
-      setTimeout(tryReconnect, 3000);
-    };
-
-    ws.onerror = () => {
-      elements.blocks.parentElement.style.opacity = '0.5';
-    };
-
-    function tryReconnect() {
-      location.reload();
-    }
-
-    async function fetchAPI(path) {
-      try {
-        const res = await fetch(`${API_BASE}${path}`);
-        if (!res.ok) throw new Error('API error');
-        return await res.json();
-      } catch (e) {
-        console.error('API fetch error:', e);
-        return null;
-      }
-    }
-
-    function updateFromWebSocket(data) {
-      const type = data.type;
-
-      if (type === 'block') {
-        const block = data.data;
-        addBlockToList(block);
-      } else if (type === 'transaction') {
-        addTxToMempool(data.data);
-      } else if (type === 'chain') {
-        updateChainState(data.data);
-      } else if (type === 'sync') {
-        updateSyncState(data.data);
-      }
-    }
-
-    function addBlockToList(block) {
-      const li = document.createElement('div');
-      li.className = 'block-item';
-      li.innerHTML = `
-        <span class="height">#${block.index}</span>
-        <span class="hash">${block.hash.substring(0, 12)}...</span>
-      `;
-      // Add to top of list, remove if too many
-      const list = document.getElementById('block-list');
-      if (list.children.length > 15) list.removeChild(list.lastElementChild);
-      list.insertBefore(li, list.firstChild);
-    }
-
-    function addTxToMempool(tx) {
-      const list = document.getElementById('tx-list');
-      const existing = Array.from(list.children).some(e => e.querySelector('.hash')?.textContent.includes(tx.hash));
-      if (existing) return;
-
-      const li = document.createElement('div');
-      li.className = 'tx-item';
-      li.innerHTML = `
-        <span class="hash">${tx.hash.substring(0, 12)}...</span>
-        <span class="amount">${tx.amount} NOSH</span>
-      `;
-      list.insertBefore(li, list.firstChild);
-      if (list.children.length > 20) list.removeChild(list.lastElementChild);
-    }
-
-    function updateChainState(data) {
-      if (data.blocks) elements.blocks.textContent = data.blocks;
-      if (data.peers) elements.peers.textContent = data.peers;
-      if (data.mempoolSize) elements.mempool.textContent = data.mempoolSize;
-      if (data.uptime) elements.uptime.textContent = formatUptime(data.uptime);
-    }
-
-    function updateSyncState(data) {
-      // Could add sync visualization here
-    }
-
-    function formatUptime(seconds) {
-      const h = Math.floor(seconds / 3600);
-      const m = Math.floor((seconds % 3600) / 60);
-      return h > 0 ? `${h}h ${m}m` : `${m}m`;
-    }
-
-    // Initial fetch
-    document.addEventListener('DOMContentLoaded', async () => {
-      const status = await fetchAPI('/status');
-      if (status && status.success) {
-        const d = status.data;
-        elements.blocks.textContent = d.blocks ?? '--';
-        elements.peers.textContent = d.peers ?? 0;
-        elements.mempool.textContent = d.mempoolSize ?? 0;
-        if (d.latestBlock) addBlockToList(d.latestBlock);
-      } else if (status && status.data) {
-        elements.blocks.textContent = status.data.blocks ?? '--';
-      }
-      const mempool = await fetchAPI('/mempool');
-      if (mempool && mempool.success) {
-        const m = mempool.data;
-        elements.mempool.textContent = m.total ?? 0;
-        if (m.transactions && m.transactions.length) {
-          document.getElementById('tx-list').innerHTML = '';
-          m.transactions.forEach(tx => addTxToMempool(tx.transaction || tx));
-        } else {
-          document.getElementById('tx-list').innerHTML = '<p style="color: var(--text-secondary); padding: 1rem;">No pending transactions</p>';
-        }
-      }
-      const peers = await fetchAPI('/peers');
-      if (peers && peers.success) {
-        const list = document.getElementById('peer-list');
-        if (peers.data.peers && peers.data.peers.length) {
-          list.innerHTML = peers.data.peers.map(p => `<div class="peer-item"><span>${p}</span></div>`).join('');
-        } else {
-          list.innerHTML = '<p style="color: var(--text-secondary); padding: 1rem;">No peers connected</p>';
-        }
-        elements.peers.textContent = peers.data.count ?? peers.data.peers.length;
-      }
-      const blocksRes = await fetchAPI('/blocks?limit=5&offset=0');
-      if (blocksRes && blocksRes.success) {
-        const list = document.getElementById('block-list');
-        list.innerHTML = '';
-        const blks = blocksRes.data.blocks || [];
-        if (blks.length) blks.forEach(b => addBlockToList({ index: b.height ?? b.index, hash: b.hash }));
-        else {
-          const latest = await fetchAPI('/blocks/latest');
-          if (latest && latest.success) addBlockToList(latest.data);
-        }
-      }
-    });
-
-    // Reconnect on network change
-    window.addEventListener('online', () => {
-      if (!wsConnected) tryReconnect();
-    });
-  </script>
+  <div class="live"><span class="dot"></span><span id="liveText">Live</span> <span id="connDot" style="width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;margin-left:4px"></span></div>
+</div>
+<div class="wrap">
+  <div class="page active" id="p-dashboard">
+    <div class="hero"><h1>NoshChain <span>Explorer</span></h1><p>Proof-of-work • NOSH • Chain ID 13371337 • Real-time</p></div>
+    <div class="stats">
+      <div class="stat gold"><label>Block Height</label><strong id="sBlocks">—</strong><small id="sHash" class="mono">loading</small></div>
+      <div class="stat"><label>Peers</label><strong id="sPeers">—</strong><small>connected</small></div>
+      <div class="stat"><label>Mempool</label><strong id="sMempool">—</strong><small>pending</small></div>
+      <div class="stat"><label>Difficulty</label><strong id="sDiff">—</strong><small>leading zeros</small></div>
+    </div>
+    <div class="grid2">
+      <div class="card"><head>Latest Blocks <span onclick="showPage('blocks')">View all →</span></head><body id="dashBlocks"><div style="padding:24px;text-align:center;color:var(--muted);font-size:13px">Loading...</div></body></div>
+      <div class="card"><head>Mempool <span onclick="showPage('txs')">View all →</span></head><body id="dashMempool"><div style="padding:24px;text-align:center;color:var(--muted);font-size:13px">Loading...</div></body></div>
+    </div>
+    <div class="card"><head>Network Health <span id="healthBadge"><span class="badge badge-green">Healthy</span></span></head><body style="padding:16px 18px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;font-size:12px" id="healthGrid"></body></div>
+  </div>
+  <div class="page" id="p-blocks"><div class="hero" style="padding:20px 28px"><h1 style="font-size:22px">Block Explorer</h1><p>Browse blocks and rewards</p></div><div class="card"><head>All Blocks <span><button class="btn btn-ghost" style="padding:6px 10px;font-size:12px" onclick="loadBlocks()">↻ Refresh</button></span></head><body id="blocksList"></body></div></div>
+  <div class="page" id="p-txs"><div class="hero" style="padding:20px 28px"><h1 style="font-size:22px">Transactions</h1><p>Pending and confirmed</p></div><div class="grid2"><div class="card"><head>Pending (Mempool)</head><body id="txPending"></body></div><div class="card"><head>Lookup by Hash</head><body style="padding:16px"><input id="txHash" class="input mono" placeholder="64-char hash"><button class="btn" style="margin-top:10px;width:100%" onclick="lookupTx()">Lookup</button><div id="txResult" style="margin-top:12px;font-size:12px"></div></body></div></div></div>
+  <div class="page" id="p-wallets"><div class="hero" style="padding:20px 28px"><h1 style="font-size:22px">Wallets</h1><p>Create, check, send NOSH</p></div><div class="wallet-grid"><div class="card"><head>◆ Create Wallet</head><body style="padding:16px"><input id="wName" class="input" placeholder="Wallet name e.g. alice"><button class="btn" style="margin-top:10px;width:100%" onclick="createWallet()">Generate</button><div id="wCreateRes" style="margin-top:12px;font-size:12px;word-break:break-all"></div></body></div><div class="card"><head>◎ Check Balance</head><body style="padding:16px"><input id="bAddr" class="input mono" placeholder="40-char address"><button class="btn" style="margin-top:10px;width:100%" onclick="checkBalance()">Check Balance</button><div id="bRes" style="margin-top:12px;font-size:13px"></div></body></div></div><div class="card" style="margin-top:16px"><head>↗ Send NOSH</head><body style="padding:16px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><input id="sFrom" class="input mono" placeholder="From"><input id="sTo" class="input mono" placeholder="To"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px"><input id="sAmt" class="input" placeholder="Amount wei"><input id="sFee" class="input" placeholder="Fee"></div><button class="btn" style="margin-top:12px;width:100%" onclick="alert('Use CLI: npm run send <wallet> <to> <amount>')">Send</button><p style="font-size:11px;color:var(--muted);margin-top:8px">Use CLI: <span class="mono">npm run send alice &lt;to&gt; &lt;amount&gt;</span></p></body></div></div>
+  <div class="page" id="p-tokens"><div class="hero" style="padding:20px 28px"><h1 style="font-size:22px">Tokens</h1><p>Custom tokens on NoshChain</p></div><div class="card"><head>All Tokens <span class="badge badge-gold" id="tokenCount">0 tokens</span></head><body id="tokenList"><div style="padding:24px;text-align:center;color:var(--muted)">Loading...</div></body></div><div class="card" style="margin-top:16px"><head>Token Balance</head><body style="padding:16px;display:flex;gap:8px"><input id="tId" class="input mono" placeholder="Token ID"><input id="tAddr" class="input mono" placeholder="Address"><button class="btn" onclick="lookupTokenBal()">Check</button></body><div id="tBalRes" style="padding:0 16px 16px;font-size:12px"></div></div></div>
+  <div class="page" id="p-network"><div class="hero" style="padding:20px 28px"><h1 style="font-size:22px">Network</h1><p>Supply and metrics</p></div><div class="stats"><div class="stat"><label>Genesis Supply</label><strong style="font-size:16px">21M</strong><small>NOSH</small></div><div class="stat"><label>Max Supply</label><strong style="font-size:16px">231M</strong><small>NOSH</small></div><div class="stat"><label>Block Reward</label><strong id="nReward">—</strong><small>current era</small></div><div class="stat"><label>Halving In</label><strong id="nHalving">—</strong><small>blocks</small></div></div><div class="grid2"><div class="card"><head>Node Metrics</head><body id="netMetrics" style="padding:16px;font-size:13px;line-height:1.8"></body></div><div class="card"><head>Peers</head><body id="netPeers"></body></div></div></div>
+</div>
+<script>
+const API=`http://${window.location.hostname}:3001/api`;
+const WS_URL=`ws://${window.location.hostname}:3001/ws`;
+let ws;function connectWS(){try{ws=new WebSocket(WS_URL);ws.onopen=()=>{document.getElementById('connDot').style.background='var(--green)';document.getElementById('liveText').textContent='Live'};ws.onmessage=e=>{try{const d=JSON.parse(e.data);if(d.type==='block')loadDashboard();if(d.type==='transaction')loadDashboard()}catch{}};ws.onclose=()=>{document.getElementById('connDot').style.background='var(--red)';document.getElementById('liveText').textContent='Reconnecting';setTimeout(connectWS,3000)};ws.onerror=()=>{document.getElementById('connDot').style.background='var(--red)'}}catch{}}
+connectWS();
+function showPage(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById('p-'+p).classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.p===p));if(p==='blocks')loadBlocks();if(p==='txs')loadTxs();if(p==='tokens')loadTokens();if(p==='network')loadNetwork()}
+document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.p)));
+function fmtHash(h){return h?`<span class="hash mono" onclick="navigator.clipboard.writeText('${h}')" title="${h}">${h.slice(0,10)}…${h.slice(-6)}</span>`:'—'}
+function fmtAddr(a){return a?`<span class="hash mono" title="${a}">${a.slice(0,8)}…${a.slice(-6)}</span>`:'—'}
+async function api(path){try{const r=await fetch(API+path);return await r.json()}catch(e){return null}}
+async function loadDashboard(){
+  const s=await api('/status');
+  if(s&&s.success){
+    const d=s.data;
+    document.getElementById('sBlocks').textContent=d.blocks;
+    document.getElementById('sHash').textContent=d.latestBlock?d.latestBlock.hash.slice(0,16)+'…':'—';
+    document.getElementById('sPeers').textContent=d.peers;
+    document.getElementById('sMempool').textContent=d.mempoolSize;
+    document.getElementById('sDiff').textContent=d.latestBlock?d.latestBlock.difficulty:'—';
+    document.getElementById('dashBlocks').innerHTML=`<div class="row"><span>Height <b>#${d.latestBlock.height}</b></span><span>${fmtHash(d.latestBlock.hash)}</span></div><div class="row"><span>Miner</span><span>${fmtAddr(d.latestBlock.miner)}</span></div><div class="row"><span>Chain Work</span><span class="mono">${d.chainWork}</span></div>`;
+    document.getElementById('dashMempool').innerHTML=d.mempoolSize?`<div class="row"><span>Pending</span><span class="badge badge-gold">${d.mempoolSize} txs</span></div>`:`<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">No pending</div>`;
+    document.getElementById('healthGrid').innerHTML=`<div><div style="color:var(--muted);font-size:11px">CONSENSUS</div><div style="font-weight:600">${d.consensus}</div></div><div><div style="color:var(--muted);font-size:11px">CHAIN ID</div><div class="mono">${d.chainId}</div></div><div><div style="color:var(--muted);font-size:11px">GENESIS</div><div class="mono" style="font-size:11px">${d.genesisHash.slice(0,12)}…</div></div><div><div style="color:var(--muted);font-size:11px">NODE</div><div class="mono" style="font-size:11px">${d.node}</div></div>`;
+  }
+  const bl=await api('/blocks?limit=5&offset=0');
+  if(bl&&bl.success&&bl.data.blocks.length){
+    document.getElementById('dashBlocks').innerHTML=bl.data.blocks.map(b=>`<div class="row"><span><b>#${b.height}</b> <span class="mono" style="font-size:11px;color:var(--muted)">${b.hash.slice(0,12)}…</span></span><span class="badge badge-green">${b.transactionCount} txs</span></div>`).join('');
+  }
+}
+async function loadBlocks(){
+  const el=document.getElementById('blocksList');el.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">Loading...</div>';
+  const r=await api('/blocks?limit=20&offset=0');
+  if(r&&r.success){el.innerHTML=r.data.blocks.map(b=>`<div class="row"><div><div style="font-weight:600">#${b.height} <span class="badge badge-gold" style="margin-left:6px">diff ${b.difficulty}</span></div><div class="hash mono" style="font-size:11px">${b.hash}</div><div style="font-size:11px;color:var(--muted)">prev ${b.previousHash.slice(0,16)}… • ${b.transactionCount} txs</div></div><div style="text-align:right"><div class="mono" style="font-size:11px">${new Date(b.timestamp).toLocaleString()}</div><div class="mono" style="font-size:11px;color:var(--muted)">${b.miner.slice(0,10)}…</div></div></div>`).join('')||'<div style="padding:16px;text-align:center;color:var(--muted)">No blocks</div>'}
+}
+async function loadTxs(){
+  const r=await api('/mempool');const el=document.getElementById('txPending');
+  if(r&&r.success){if(!r.data.transactions.length)el.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">No pending transactions</div>';else el.innerHTML=r.data.transactions.map(x=>{const t=x.transaction||x;return `<div class="row"><div><div class="hash mono">${(x.hash||'').slice(0,16)}…</div><div style="font-size:11px;color:var(--muted)">${fmtAddr(t.from)} → ${fmtAddr(t.to)}</div></div><div style="text-align:right"><div style="font-weight:600">${(BigInt(t.amount)/BigInt(1e18)).toString()} NOSH</div><div style="font-size:11px;color:var(--muted)">fee ${(BigInt(t.fee)/BigInt(1e15)).toString()} finney</div></div></div>`}).join('')}
+}
+async function lookupTx(){
+  const h=document.getElementById('txHash').value.trim();if(!h)return;
+  const r=await api('/transactions/'+h);document.getElementById('txResult').innerHTML=r&&r.success?`<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px"><div class="mono" style="font-size:11px;word-break:break-all">${JSON.stringify(r.data,null,2)}</div></div>`:`<span style="color:var(--red)">${r?r.error.message:'Not found'}</span>`
+}
+async function checkBalance(){
+  const a=document.getElementById('bAddr').value.trim();if(!a)return;
+  const r=await api('/address/'+a+'/balance');document.getElementById('bRes').innerHTML=r&&r.success?`<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px"><div style="font-size:20px;font-weight:800">${(BigInt(r.data.balance)/BigInt(1e18)).toString()} <span style="font-size:12px;color:var(--gold)">NOSH</span></div><div class="mono" style="font-size:11px;color:var(--muted)">${r.data.balance} wei</div></div>`:`<span style="color:var(--red)">${r?r.error.message:'Invalid address'}</span>`
+}
+async function createWallet(){const n=document.getElementById('wName').value.trim();if(!n)return alert('Enter wallet name');document.getElementById('wCreateRes').innerHTML='<span style="color:var(--muted)">Use CLI: <span class="mono">npm run wallet '+n+'</span> — secp256k1 wallets generated server-side</span>'}
+async function loadTokens(){
+  const r=await api('/tokens');const el=document.getElementById('tokenList');
+  if(r&&r.success){document.getElementById('tokenCount').textContent=r.data.count+' tokens';if(!r.data.tokens.length)el.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">No tokens yet<br><span style="font-size:11px">Use <span class="mono">npx tsx src/create-token.ts &lt;wallet&gt; &lt;name&gt; &lt;symbol&gt; &lt;decimals&gt; &lt;supply&gt;</span></span></div>';else el.innerHTML=r.data.tokens.map(t=>`<div class="row"><div><div style="font-weight:600">${t.name} <span class="badge badge-gold">${t.symbol}</span></div><div class="mono" style="font-size:11px;color:var(--muted)">${t.id.slice(0,16)}… • supply ${t.totalSupply}</div></div><div class="mono" style="font-size:11px">${t.creator.slice(0,8)}…</div></div>`).join('')}
+}
+async function lookupTokenBal(){const id=document.getElementById('tId').value.trim(),a=document.getElementById('tAddr').value.trim();if(!id||!a)return;const r=await api('/tokens/'+id+'/balance/'+a);document.getElementById('tBalRes').innerHTML=r&&r.success?`<span style="color:var(--green);font-weight:600">${r.data.balance} <span style="color:var(--muted)">${r.data.symbol}</span></span>`:`<span style="color:var(--red)">${r?r.error.message:'Not found'}</span>`}
+async function loadNetwork(){
+  const n=await api('/network'),m=await api('/metrics'),p=await api('/peers');
+  if(n&&n.success){document.getElementById('nReward').textContent=(BigInt(n.data.blockReward)/BigInt(1e18)).toString()+' NOSH';document.getElementById('nHalving').textContent=n.data.blocksUntilNextHalving.toLocaleString()}
+  if(m&&m.success){const d=m.data;document.getElementById('netMetrics').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><span style="color:var(--muted)">Uptime</span><br><b>${Math.floor(d.uptime/60)}m</b></div><div><span style="color:var(--muted)">Heap</span><br><b>${Math.round(d.memory.heapUsed/1024/1024)} MB</b></div><div><span style="color:var(--muted)">Blocks</span><br><b>${d.blockchain.blocks}</b></div><div><span style="color:var(--muted)">Difficulty</span><br><b>${d.blockchain.difficulty}</b></div></div>`}
+  if(p&&p.success){document.getElementById('netPeers').innerHTML=p.data.peers.length? p.data.peers.map(u=>`<div class="row"><span class="mono" style="font-size:12px">${u}</span><span class="badge badge-green">connected</span></div>`).join(''):'<div style="padding:16px;text-align:center;color:var(--muted)">No peers</div>'}
+}
+loadDashboard();loadNetwork();
+setInterval(loadDashboard,5000);
+</script>
 </body>
 </html>
