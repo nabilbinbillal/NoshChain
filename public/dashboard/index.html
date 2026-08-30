@@ -50,7 +50,8 @@ body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);min-hei
 .hash{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);cursor:pointer}
 .page{display:none}.page.active{display:block}
 .wallet-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.wallet-grid{grid-template-columns:1fr}.nav{overflow-x:auto}}
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.wallet-grid{grid-template-columns:1fr}}
+@media(max-width:640px){.topbar{height:auto;padding:12px 16px;flex-wrap:wrap;gap:12px}.nav{width:100%;overflow-x:auto;scrollbar-width:none}.nav::-webkit-scrollbar{display:none}.stats{grid-template-columns:1fr 1fr;gap:12px}.stat{padding:14px}.stat strong{font-size:20px}.hero{padding:20px}.hero h1{font-size:22px}.wrap{padding:16px}}
 </style>
 </head>
 <body>
