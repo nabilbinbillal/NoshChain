@@ -18,7 +18,7 @@ body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);min-hei
 .nav button{background:transparent;border:0;color:var(--muted);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:.2s;position:relative;overflow:hidden}
 .nav button::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(212,175,55,.1),transparent);transition:left 0.5s ease}
 .nav button:hover::before{left:100%}
-.nav button.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0B0E14;font-weight:600;box-shadow:0 4px 12px rgba(212,175,55,.3)}
+.nav button.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0B0E14;font-weight:600;box-shadow:0 4px 12px rgba(212,175,55,.3);transform:scale(1.02)}
 .live{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);border:1px solid var(--border);padding:6px 12px;border-radius:20px;background:var(--card)}
 .dot{width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
@@ -39,7 +39,7 @@ body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);min-hei
 .stat.gold strong{color:var(--gold)}
 .grid2{display:grid;grid-template-columns:1.4fr .8fr;gap:16px;margin-bottom:24px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all 0.3s ease}
-.card:hover{border-color:rgba(212,175,55,.3);box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.card:hover{border-color:rgba(212,175,55,.3);box-shadow:0 8px 24px rgba(0,0,0,.2);transform:translateY(-1px)}
 .card-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border);font-weight:600;font-size:13px}
 .card-head span{color:var(--muted);font-weight:400;font-size:12px;cursor:pointer}
 .card-body{display:block;padding:0}
@@ -53,8 +53,10 @@ body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);min-hei
 @keyframes spin{to{transform:rotate(360deg)}}
 .toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-size:13px;font-weight:500;z-index:100;animation:slideIn 0.3s ease;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
 @keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
-.block-card{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;transition:all 0.3s ease;cursor:pointer}
-.block-card:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:0 8px 24px rgba(212,175,55,.1)}
+.block-card{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;transition:all 0.3s ease;cursor:pointer;position:relative;overflow:hidden}
+.block-card:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:0 8px 24px rgba(212,175,55,.15)}
+.block-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:linear-gradient(180deg,var(--gold),var(--gold2));opacity:0;transition:opacity 0.3s ease}
+.block-card:hover::before{opacity:1}
 .block-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .block-number{font-size:18px;font-weight:800;color:var(--gold)}
 .block-hash{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);word-break:break-all}
@@ -72,6 +74,18 @@ body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);min-hei
 .pulse-ring{position:relative}
 .pulse-ring::before{content:'';position:absolute;top:50%;left:50%;width:100%;height:100%;border:2px solid var(--gold);border-radius:50%;transform:translate(-50%,-50%);animation:pulse-ring 2s infinite}
 @keyframes pulse-ring{0%{transform:translate(-50%,-50%) scale(0.8);opacity:1}100%{transform:translate(-50%,-50%) scale(1.5);opacity:0}}
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px)}
+.modal.active{display:flex}
+.modal-content{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;position:relative;animation:modalIn 0.3s ease;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+@keyframes modalIn{from{transform:scale(0.9);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-close{position:absolute;top:16px;right:16px;background:transparent;border:0;color:var(--muted);font-size:24px;cursor:pointer;padding:4px;line-height:1;border-radius:4px;transition:0.2s}
+.modal-close:hover{background:var(--card2);color:var(--text)}
+.modal-header{font-size:20px;font-weight:800;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.modal-row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(37,42,60,.5)}
+.modal-row:last-child{border:0}
+.modal-label{color:var(--muted);font-size:13px}
+.modal-value{font-weight:600;font-size:14px;text-align:right}
+.modal-value.mono{font-family:'JetBrains Mono',monospace;font-size:12px}
 .input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:8px;font-size:13px;outline:none}
 .input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,.1)}
 .btn{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0B0E14;border:0;padding:10px 16px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;justify-content:center;gap:8px;position:relative;overflow:hidden}
@@ -85,7 +99,7 @@ body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);min-hei
 .wallet-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:1024px){.stats{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}
 @media(max-width:768px){.topbar{padding:0 16px}.logo{font-size:16px}.nav{gap:2px}.nav button{padding:6px 10px;font-size:12px}.stats{gap:12px}.stat{padding:14px}.stat strong{font-size:22px}.hero{padding:20px}.hero h1{font-size:24px}.grid2{grid-template-columns:1fr}.wallet-grid{grid-template-columns:1fr}}
-@media(max-width:480px){.topbar{height:auto;padding:12px 16px;flex-wrap:wrap;gap:12px}.nav{width:100%;overflow-x:auto;scrollbar-width:none}.nav::-webkit-scrollbar{display:none}.stats{grid-template-columns:1fr 1fr;gap:12px}.stat{padding:12px}.stat strong{font-size:20px}.hero{padding:16px}.hero h1{font-size:20px}.wrap{padding:12px}.card-head{padding:12px 14px}.row{padding:10px 14px;font-size:12px}}
+@media(max-width:480px){.topbar{height:auto;padding:12px 16px;flex-wrap:wrap;gap:12px}.nav{width:100%;overflow-x:auto;scrollbar-width:none}.nav::-webkit-scrollbar{display:none}.stats{grid-template-columns:1fr 1fr;gap:12px}.stat{padding:12px}.stat strong{font-size:20px}.hero{padding:16px}.hero h1{font-size:20px}.wrap{padding:12px}.card-head{padding:12px 14px}.row{padding:10px 14px;font-size:12px}.modal-content{width:95%;padding:16px}.modal-header{font-size:18px}.modal-row{flex-direction:column;gap:4px}.modal-value{text-align:left}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
@@ -123,10 +137,11 @@ body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);min-hei
     </div>
     <div class="card"><div class="card-head">Network Health <span id="healthBadge"><span class="badge badge-green">Healthy</span></span></div><div class="card-body" style="padding:16px 18px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;font-size:12px" id="healthGrid"></div></div>
   </div>
-  <div class="page" id="p-blocks"><div class="hero" style="padding:20px 28px"><h1 style="font-size:22px">Block Explorer</h1><p>Browse blocks and rewards</p></div><div class="card"><div class="card-head">All Blocks <span><button class="btn btn-ghost" style="padding:6px 10px;font-size:12px" onclick="loadBlocks()">↻ Refresh</button></span></div><div class="card-body" id="blocksList" style="padding:16px"></div></div></div>
+  <div class="page" id="p-blocks"><div class="hero" style="padding:20px 28px"><h1 style="font-size:22px">Block Explorer</h1><p>Browse blocks and rewards • Click any block for details</p></div><div class="card"><div class="card-head">All Blocks <span><button class="btn btn-ghost" style="padding:6px 10px;font-size:12px" onclick="loadBlocks()">↻ Refresh</button></span></div><div class="card-body" id="blocksList" style="padding:16px"></div></div></div>
   <div class="page" id="p-txs"><div class="hero" style="padding:20px 28px"><h1 style="font-size:22px">Transactions</h1><p>Pending and confirmed</p></div><div class="grid2"><div class="card"><div class="card-head">Pending (Mempool)</div><div class="card-body" id="txPending"></div></div><div class="card"><div class="card-head">Lookup by Hash</div><div class="card-body" style="padding:16px"><input id="txHash" class="input mono" placeholder="64-char hash"><button class="btn" style="margin-top:10px;width:100%" onclick="lookupTx()">Lookup</button><div id="txResult" style="margin-top:12px;font-size:12px"></div></div></div></div></div>
   <div class="page" id="p-wallets"><div class="hero" style="padding:20px 28px"><h1 style="font-size:22px">Wallets</h1><p>Create, check, send NOSH</p></div><div class="wallet-grid"><div class="card"><div class="card-head">◆ Create Wallet</div><div class="card-body" style="padding:16px"><input id="wName" class="input" placeholder="Wallet name e.g. alice"><button class="btn" style="margin-top:10px;width:100%" onclick="createWallet()">Generate</button><div id="wCreateRes" style="margin-top:12px;font-size:12px;word-break:break-all"></div></div></div><div class="card"><div class="card-head">◎ Check Balance</div><div class="card-body" style="padding:16px"><input id="bAddr" class="input mono" placeholder="40-char address"><button class="btn" style="margin-top:10px;width:100%" onclick="checkBalance()">Check Balance</button><div id="bRes" style="margin-top:12px"></div></div></div></div><div class="card" style="margin-top:16px"><div class="card-head">↗ Send NOSH</div><div class="card-body" style="padding:16px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><input id="sFrom" class="input mono" placeholder="From"><input id="sTo" class="input mono" placeholder="To"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px"><input id="sAmt" class="input" placeholder="Amount wei"><input id="sFee" class="input" placeholder="Fee"></div><button class="btn" style="margin-top:12px;width:100%" onclick="alert('Use CLI: npm run send <wallet> <to> <amount>')">Send</button><p style="font-size:11px;color:var(--muted);margin-top:8px">Use CLI: <span class="mono">npm run send alice &lt;to&gt; &lt;amount&gt;</span></p></div></div></div>
   <div class="page" id="p-tokens"><div class="hero" style="padding:20px 28px"><h1 style="font-size:22px">Tokens</h1><p>Custom tokens on NoshChain</p></div><div class="card"><div class="card-head">All Tokens <span class="badge badge-gold" id="tokenCount">0 tokens</span></div><div class="card-body" id="tokenList"><div style="padding:24px;text-align:center;color:var(--muted)">Loading...</div></div></div><div class="card" style="margin-top:16px"><div class="card-head">Token Balance</div><div class="card-body" style="padding:16px;display:flex;gap:8px"><input id="tId" class="input mono" placeholder="Token ID"><input id="tAddr" class="input mono" placeholder="Address"><button class="btn" onclick="lookupTokenBal()">Check</button></div><div id="tBalRes" style="padding:0 16px 16px;font-size:12px"></div></div></div>
+<div id="blockModal" class="modal"><div class="modal-content"><button class="modal-close" onclick="closeBlockModal()">×</button><div class="modal-header" id="modalTitle">Block Details</div><div id="modalBody"></div></div></div>
   <div class="page" id="p-network"><div class="hero" style="padding:20px 28px"><h1 style="font-size:22px">Network</h1><p>Supply and metrics</p></div><div class="stats"><div class="stat"><label>Genesis Supply</label><strong style="font-size:16px">21M</strong><small>NOSH</small></div><div class="stat"><label>Max Supply</label><strong style="font-size:16px">231M</strong><small>NOSH</small></div><div class="stat"><label>Block Reward</label><strong id="nReward">—</strong><small>current era</small></div><div class="stat"><label>Halving In</label><strong id="nHalving">—</strong><small>blocks</small></div></div><div class="grid2"><div class="card"><div class="card-head">Node Metrics</div><div class="card-body" id="netMetrics" style="padding:16px;font-size:13px;line-height:1.8"></div></div><div class="card"><div class="card-head">Peers</div><div class="card-body" id="netPeers"></div></div></div></div>
 </div>
 <script>
@@ -175,7 +190,7 @@ async function loadBlocks(){
       el.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">No blocks yet</div>';
       return;
     }
-    el.innerHTML=r.data.blocks.map((b,i)=>`<div class="block-card" onclick="showToast('Block #${b.height} copied','success')"><div class="block-card-header"><div class="block-number">#${b.height}</div><span class="badge badge-gold">diff ${b.difficulty||'—'}</span></div><div class="block-hash mono">${b.hash||'—'}</div><div class="block-details"><div><div class="block-detail">Timestamp</div><div class="block-detail-value mono">${b.timestamp?new Date(b.timestamp).toLocaleString():'—'}</div></div><div><div class="block-detail">Transactions</div><div class="block-detail-value">${b.transactionCount||0}</div></div><div><div class="block-detail">Miner</div><div class="block-detail-value mono">${b.miner?.slice(0,10)||'—'}…</div></div></div></div>`).join('');
+    el.innerHTML=r.data.blocks.map((b,i)=>`<div class="block-card" onclick="showBlockDetails(${b.height}, '${b.hash}')"><div class="block-card-header"><div class="block-number">#${b.height}</div><span class="badge badge-gold">diff ${b.difficulty||'—'}</span></div><div class="block-hash mono">${b.hash||'—'}</div><div class="block-details"><div><div class="block-detail">Timestamp</div><div class="block-detail-value mono">${b.timestamp?new Date(b.timestamp).toLocaleString():'—'}</div></div><div><div class="block-detail">Transactions</div><div class="block-detail-value">${b.transactionCount||0}</div></div><div><div class="block-detail">Miner</div><div class="block-detail-value mono">${b.miner?.slice(0,10)||'—'}…</div></div></div></div>`).join('');
   }else{
     el.innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">Failed to load blocks</div>';
   }
@@ -204,7 +219,18 @@ async function createWallet(){const n=document.getElementById('wName').value.tri
 async function loadTokens(){
   const el=document.getElementById('tokenList');el.innerHTML='<div style="padding:24px;text-align:center"><span class="spinner"></span></div>';
   const r=await api('/tokens');
-  if(r&&r.success){document.getElementById('tokenCount').textContent=(r.data?.count||0)+' tokens';if(!r.data?.tokens?.length)el.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">No tokens yet<br><span style="font-size:11px">Use <span class="mono">npx tsx src/create-token.ts &lt;wallet&gt; &lt;name&gt; &lt;symbol&gt; &lt;decimals&gt; &lt;supply&gt;</span></span></div>';else el.innerHTML=r.data.tokens.map(t=>`<div class="row"><div><div style="font-weight:600">${t.name||'—'} <span class="badge badge-gold">${t.symbol||'—'}</span></div><div class="mono" style="font-size:11px;color:var(--muted)">${t.id?.slice(0,16)||'—'}… • supply ${t.totalSupply||'—'}</div></div><div class="mono" style="font-size:11px">${t.creator?.slice(0,8)||'—'}…</div></div>`).join('')}else{el.innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">Failed to load tokens</div>'}
+  if(r&&r.success){
+    const tokens=r.data?.tokens||[];
+    const count=r.data?.count||0;
+    document.getElementById('tokenCount').textContent=count+' tokens';
+    if(!tokens.length){
+      el.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">No custom tokens yet<br><span style="font-size:11px">Use <span class="mono">npx tsx src/create-token.ts &lt;wallet&gt; &lt;name&gt; &lt;symbol&gt; &lt;decimals&gt; &lt;supply&gt;</span></span></div>';
+    }else{
+      el.innerHTML=tokens.map(t=>`<div class="row"><div><div style="font-weight:600">${t.name||'—'} <span class="badge badge-gold">${t.symbol||'—'}</span></div><div class="mono" style="font-size:11px;color:var(--muted)">${t.id?.slice(0,16)||'—'}… • supply ${t.totalSupply||'—'}</div></div><div class="mono" style="font-size:11px">${t.creator?.slice(0,8)||'—'}…</div></div>`).join('');
+    }
+  }else{
+    el.innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">Failed to load tokens</div>';
+  }
 }
 async function lookupTokenBal(){const id=document.getElementById('tId').value.trim(),a=document.getElementById('tAddr').value.trim();if(!id||!a)return;const r=await api('/tokens/'+id+'/balance/'+a);document.getElementById('tBalRes').innerHTML=r&&r.success?`<span style="color:var(--green);font-weight:600">${r.data.balance} <span style="color:var(--muted)">${r.data.symbol}</span></span>`:`<span style="color:var(--red)">${r?r.error.message:'Not found'}</span>`}
 async function loadNetwork(){
@@ -243,6 +269,36 @@ function animateValue(element, start, end, duration){
   }
   requestAnimationFrame(update);
 }
+async function showBlockDetails(height, hash){
+  const modal=document.getElementById('blockModal');
+  const modalBody=document.getElementById('modalBody');
+  const modalTitle=document.getElementById('modalTitle');
+  modalTitle.textContent=`Block #${height}`;
+  modalBody.innerHTML='<div style="padding:24px;text-align:center"><span class="spinner"></span></div>';
+  modal.classList.add('active');
+  const r=await api('/blocks?limit=1&offset=0');
+  if(r&&r.success&&r.data?.blocks?.length){
+    const b=r.data.blocks.find(block=>block.hash===hash)||r.data.blocks[0];
+    modalBody.innerHTML=`
+      <div class="modal-row"><span class="modal-label">Block Height</span><span class="modal-value">#${b.height}</span></div>
+      <div class="modal-row"><span class="modal-label">Hash</span><span class="modal-value mono">${b.hash||'—'}</span></div>
+      <div class="modal-row"><span class="modal-label">Previous Hash</span><span class="modal-value mono">${b.previousHash?.slice(0,20)||'—'}…</span></div>
+      <div class="modal-row"><span class="modal-label">Timestamp</span><span class="modal-value mono">${b.timestamp?new Date(b.timestamp).toLocaleString():'—'}</span></div>
+      <div class="modal-row"><span class="modal-label">Transactions</span><span class="modal-value">${b.transactionCount||0}</span></div>
+      <div class="modal-row"><span class="modal-label">Difficulty</span><span class="modal-value">${b.difficulty||'—'}</span></div>
+      <div class="modal-row"><span class="modal-label">Miner</span><span class="modal-value mono">${b.miner||'—'}</span></div>
+      <div class="modal-row"><span class="modal-label">Nonce</span><span class="modal-value mono">${b.nonce||'—'}</span></div>
+    `;
+  }else{
+    modalBody.innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">Failed to load block details</div>';
+  }
+}
+function closeBlockModal(){
+  document.getElementById('blockModal').classList.remove('active');
+}
+document.getElementById('blockModal').addEventListener('click', (e) => {
+  if(e.target.id==='blockModal') closeBlockModal();
+});
 const _origLoadDashboard2 = loadDashboard;
 loadDashboard = async function(){
   await _origLoadDashboard2();
