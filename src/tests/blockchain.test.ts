@@ -14,7 +14,7 @@ import {
 } from "../types.js";
 import { calculateBlockReward } from "../crypto.js";
 import { getBalance } from "../state.js";
-import { loadState } from "../storage.js";
+import { loadStateDb } from "../storage-db.js";
 
 function testConfig(dataFile: string): NodeConfig {
   return {
@@ -28,6 +28,11 @@ function testConfig(dataFile: string): NodeConfig {
     targetBlockTimeMs: 60_000,
     difficultyAdjustmentInterval: 10,
     maxBodySize: 1024 * 1024,
+    logLevel: "error",
+    logDir: "logs",
+    enableWs: false,
+    enableRateLimit: false,
+    corsOrigins: ["*"],
   };
 }
 
@@ -35,7 +40,7 @@ function withTempChain(
   fn: (blockchain: Blockchain, dataFile: string) => void | Promise<void>
 ) {
   const dir = mkdtempSync(join(tmpdir(), "noshchain-"));
-  const dataFile = join(dir, "chain.json");
+  const dataFile = join(dir, "chain.db");
 
   return async () => {
     try {
@@ -175,7 +180,7 @@ test(
       calculateBlockReward(1)
     );
 
-    const stored = loadState(dataFile);
+    const stored = loadStateDb(dataFile);
     assert.ok(stored);
     assert.equal(stored.chain.length, 2);
   })

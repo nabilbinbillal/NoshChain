@@ -14,8 +14,8 @@ let node1: ChildProcess | undefined;
 let node2: ChildProcess | undefined;
 
 const DATA_FILES = [
-  "data/e2e-node1.json",
-  "data/e2e-node2.json",
+  "data/e2e-node1.db",
+  "data/e2e-node2.db",
   "data/wallets/alice.json",
   "data/wallets/bob.json",
 ];
@@ -113,12 +113,12 @@ test("end-to-end two-node network", async () => {
     node1 = await startNode(
       3011,
       "http://localhost:3012",
-      "data/e2e-node1.json"
+      "data/e2e-node1.db"
     );
     node2 = await startNode(
       3012,
       "http://localhost:3011",
-      "data/e2e-node2.json"
+      "data/e2e-node2.db"
     );
 
     const node1Info = (await fetchJSON("http://localhost:3011/")) as {
@@ -265,7 +265,7 @@ test("end-to-end two-node network", async () => {
     node1 = await startNode(
       3011,
       "http://localhost:3012",
-      "data/e2e-node1.json"
+      "data/e2e-node1.db"
     );
 
     const restartedChain = ((await fetchJSON(

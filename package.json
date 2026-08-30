@@ -5,7 +5,7 @@
   "main": "src/node.ts",
   "scripts": {
     "node": "tsx src/node.ts",
-    "node2": "PORT=3002 PEER=http://localhost:3001 DATA_FILE=data/node2-chain.json tsx src/node.ts",
+    "node2": "PORT=3002 PEER=http://localhost:3001 DATA_FILE=data/node2.db tsx src/node.ts",
     "mine": "tsx src/mine.ts",
     "send": "tsx src/send-nosh.ts",
     "balance": "tsx src/balance.ts",
@@ -29,10 +29,21 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.5",
+    "better-sqlite3": "^13.0.3",
+    "cors": "^2.8.6",
+    "express-rate-limit": "^8.7.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "tsx": "^4.23.12",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "winston": "^3.19.0",
+    "ws": "^8.21.3"
   },
   "devDependencies": {
-    "@types/node": "^26.4.0"
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^26.4.0",
+    "@types/ws": "^8.18.1"
   }
 }

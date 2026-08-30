@@ -23,7 +23,7 @@ import {
   verifyTransaction,
 } from "../validation.js";
 import { calculateBlockReward, blockHash, meetsDifficulty } from "../crypto.js";
-import { saveState } from "../storage.js";
+import { saveStateDb } from "../storage-db.js";
 
 function testConfig(dataFile: string): NodeConfig {
   return {
@@ -37,6 +37,11 @@ function testConfig(dataFile: string): NodeConfig {
     targetBlockTimeMs: 60_000,
     difficultyAdjustmentInterval: 10,
     maxBodySize: 1024 * 1024,
+    logLevel: "error",
+    logDir: "logs",
+    enableWs: false,
+    enableRateLimit: false,
+    corsOrigins: ["*"],
   };
 }
 
@@ -44,7 +49,7 @@ function withTempChain(
   fn: (blockchain: Blockchain, dataFile: string) => void | Promise<void>
 ) {
   const dir = mkdtempSync(join(tmpdir(), "noshchain-sec-"));
-  const dataFile = join(dir, "chain.json");
+  const dataFile = join(dir, "chain.db");
 
   return async () => {
     try {
@@ -191,7 +196,7 @@ test(
       signature: "invalid",
     };
 
-    saveState(dataFile, {
+    saveStateDb(dataFile, {
       chain: blockchain.getChain(),
       mempool: [validTx, invalidTx],
       peers: [],

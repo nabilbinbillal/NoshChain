@@ -30,6 +30,11 @@ function testConfig(dataFile: string): NodeConfig {
     targetBlockTimeMs: 60_000,
     difficultyAdjustmentInterval: 10,
     maxBodySize: 1024 * 1024,
+    logLevel: "error",
+    logDir: "logs",
+    enableWs: false,
+    enableRateLimit: false,
+    corsOrigins: ["*"],
   };
 }
 
@@ -60,7 +65,7 @@ test(
   "supply conservation holds across transfers and mining",
   () => {
     const dir = mkdtempSync(join(tmpdir(), "noshchain-monetary-"));
-    const dataFile = join(dir, "chain.json");
+    const dataFile = join(dir, "chain.db");
 
     try {
       const blockchain = new Blockchain(testConfig(dataFile));
@@ -102,7 +107,7 @@ test(
   "rejects replay of confirmed transaction",
   () => {
     const dir = mkdtempSync(join(tmpdir(), "noshchain-replay-"));
-    const dataFile = join(dir, "chain.json");
+    const dataFile = join(dir, "chain.db");
 
     try {
       const blockchain = new Blockchain(testConfig(dataFile));

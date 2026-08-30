@@ -46,6 +46,11 @@ function testConfig(dataFile: string, initialDifficulty = INITIAL_DIFFICULTY): N
     targetBlockTimeMs: 60_000,
     difficultyAdjustmentInterval: 10,
     maxBodySize: 1024 * 1024,
+    logLevel: "error",
+    logDir: "logs",
+    enableWs: false,
+    enableRateLimit: false,
+    corsOrigins: ["*"],
   };
 }
 
@@ -89,7 +94,7 @@ test("halving boundary uses floor(height / interval)", () => {
 
 test("issued supply invariant holds while mining", () => {
   const dir = mkdtempSync(join(tmpdir(), "noshchain-consensus-"));
-  const dataFile = join(dir, "chain.json");
+  const dataFile = join(dir, "chain.db");
 
   try {
     const blockchain = new Blockchain(testConfig(dataFile, 1));
@@ -115,8 +120,8 @@ test("issued supply invariant holds while mining", () => {
 test("independent nodes with same params validate identical chains", () => {
   const dirA = mkdtempSync(join(tmpdir(), "noshchain-a-"));
   const dirB = mkdtempSync(join(tmpdir(), "noshchain-b-"));
-  const fileA = join(dirA, "chain.json");
-  const fileB = join(dirB, "chain.json");
+  const fileA = join(dirA, "chain.db");
+  const fileB = join(dirB, "chain.db");
 
   try {
     const nodeA = new Blockchain(testConfig(fileA, 1));
@@ -140,7 +145,7 @@ test("independent nodes with same params validate identical chains", () => {
 test("mismatched initial difficulty rejects otherwise valid chain", () => {
   const genesis = createGenesisBlock();
   const dir = mkdtempSync(join(tmpdir(), "noshchain-diff-"));
-  const dataFile = join(dir, "chain.json");
+  const dataFile = join(dir, "chain.db");
 
   try {
     const fastNode = new Blockchain(testConfig(dataFile, 1));

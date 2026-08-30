@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NoshChain Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --nosh-gold: #D4AF37;
+      --nosh-gold-dark: #A68C2A;
+      --nosh-dark: #1A1A2E;
+      --nosh-mid: #16213E;
+      --nosh-accent: #E94560;
+      --text-primary: #F1F1F1;
+      --text-secondary: #B0B0B0;
+      --card-bg: #21262D;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--nosh-dark);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .app {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, var(--nosh-mid), var(--nosh-dark));
+      border: 1px solid var(--nosh-gold);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .header h1 {
+      font-size: 1.8rem;
+      background: linear-gradient(135deg, var(--text-primary), var(--nosh-gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--nosh-gold);
+      border-radius: 8px;
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(212, 175, 55, 0.15);
+    }
+
+    .stat-card .icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--nosh-gold), var(--nosh-gold-dark));
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .stat-card .icon svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--nosh-dark);
+    }
+
+    .stat-card h3 {
+      font-size: 0.85rem;
+      color: var(--nosh-gold);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-card p {
+      font-size: 1.8rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, var(--text-primary), var(--nosh-gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Recent Blocks */
+    .recent-blocks {
+      background: var(--card-bg);
+      border: 1px solid var(--nosh-gold);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .recent-blocks h2 {
+      font-size: 1.2rem;
+      color: var(--nosh-gold);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .block-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .block-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .block-list::-webkit-scrollbar-thumb {
+      background: var(--nosh-gold);
+      border-radius: 3px;
+    }
+
+    .block-item {
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--nosh-mid);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .block-item:last-child {
+      border-bottom: none;
+    }
+
+    .block-item .height {
+      color: var(--nosh-gold);
+      font-weight: 500;
+    }
+
+    .block-item .hash {
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 120px;
+    }
+
+    /* Mempool */
+    .mempool-card {
+      background: var(--card-bg);
+      border: 1px solid var(--nosh-gold);
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+
+    .mempool-card h2 {
+      font-size: 1.2rem;
+      color: var(--nosh-gold);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tx-item {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--nosh-mid);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+
+    .tx-item:last-child {
+      border-bottom: none;
+    }
+
+    .tx-item .hash {
+      color: var(--nosh-gold);
+      font-weight: 500;
+      max-width: 100px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tx-item .amount {
+      color: var(--nosh-gold-dark);
+    }
+
+    /* Connections */
+    .connections-card {
+      background: var(--card-bg);
+      border: 1px solid var(--nosh-gold);
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+
+    .connections-card h2 {
+      font-size: 1.2rem;
+      color: var(--nosh-gold);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .peer-item {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--nosh-mid);
+      font-size: 0.85rem;
+    }
+
+    .peer-item:last-child {
+      border-bottom: none;
+    }
+
+    .peer-item span {
+      color: var(--nosh-gold);
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .app {
+        padding: 1rem;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1>🪙 NoshChain Explorer</h1>
+      <p>Real-time blockchain monitoring</p>
+    </header>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="icon">
+          <svg viewBox="0 0 24 24"><path d="M12 7v2m0 4l-3 3m3-3v2m0-4l3-3m-3 3v2"/></svg>
+        </div>
+        <h3>Blocks</h3>
+        <p id="blocks">--</h3>
+      </div>
+
+      <div class="stat-card">
+        <div class="icon">
+          <svg viewBox="0 0 24 24"><path d="M12 15V3m0 4l-3 3m3-3v2m0-4l3-3m-3 3v2"/></svg>
+        </div>
+        <h3>Peers</h3>
+        <p id="peers">--</h3>
+      </div>
+
+      <div class="stat-card">
+        <div class="icon">
+          <svg viewBox="0 0 24 24"><path d="M12 9v2m0 4l3 3m3-3v2m0-4l3-3m-3 3v2"/></svg>
+        </div>
+        <h3>Mempool</h3>
+        <p id="mempool">--</h3>
+      </div>
+
+      <div class="stat-card">
+        <div class="icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>
+        </div>
+        <h3>Uptime</h3>
+        <p id="uptime">--</p>
+      </div>
+    </div>
+
+    <section class="recent-blocks">
+      <h2>🔗 Latest Blocks</h2>
+      <div class="block-list" id="block-list">
+        <p style="color: var(--text-secondary); padding: 1rem;">Loading...</p>
+      </div>
+    </section>
+
+    <section class="mempool-card">
+      <h2>📦 Mempool</h2>
+      <div class="tx-list" id="tx-list">
+        <p style="color: var(--text-secondary); padding: 1rem;">Loading...</p>
+      </div>
+    </section>
+
+    <section class="connections-card">
+      <h2>🌐 Peers</h2>
+      <div class="peer-list" id="peer-list">
+        <p style="color: var(--text-secondary); padding: 1rem;">Loading...</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:3001/api';
+    const ws = new WebSocket('ws://localhost:3001/ws');
+
+    const elements = {
+      blocks: document.getElementById('blocks'),
+      peers: document.getElementById('peers'),
+      mempool: document.getElementById('mempool'),
+      uptime: document.getElementById('uptime'),
+      blockList: document.getElementById('block-list'),
+      txList: document.getElementById('tx-list'),
+      peerList: document.getElementById('peer-list')
+    };
+
+    let wsConnected = false;
+
+    ws.onopen = () => {
+      wsConnected = true;
+      ws.send(JSON.stringify({ type: 'subscribe', channels: ['blocks', 'transactions', 'all'] }));
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      updateFromWebSocket(data);
+    };
+
+    ws.onclose = () => {
+      wsConnected = false;
+      setTimeout(tryReconnect, 3000);
+    };
+
+    ws.onerror = () => {
+      elements.blocks.parentElement.style.opacity = '0.5';
+    };
+
+    function tryReconnect() {
+      ws.reconnect();
+    }
+
+    async function fetchAPI(path) {
+      try {
+        const res = await fetch(`${API_BASE}${path}`);
+        if (!res.ok) throw new Error('API error');
+        return await res.json();
+      } catch (e) {
+        console.error('API fetch error:', e);
+        return null;
+      }
+    }
+
+    function updateFromWebSocket(data) {
+      const type = data.type;
+
+      if (type === 'block') {
+        const block = data.data;
+        addBlockToList(block);
+      } else if (type === 'transaction') {
+        addTxToMempool(data.data);
+      } else if (type === 'chain') {
+        updateChainState(data.data);
+      } else if (type === 'sync') {
+        updateSyncState(data.data);
+      }
+    }
+
+    function addBlockToList(block) {
+      const li = document.createElement('div');
+      li.className = 'block-item';
+      li.innerHTML = `
+        <span class="height">#${block.index}</span>
+        <span class="hash">${block.hash.substring(0, 12)}...</span>
+      `;
+      // Add to top of list, remove if too many
+      const list = document.getElementById('block-list');
+      if (list.children.length > 15) list.removeChild(list.lastElementChild);
+      list.insertBefore(li, list.firstChild);
+    }
+
+    function addTxToMempool(tx) {
+      const list = document.getElementById('tx-list');
+      const existing = Array.from(list.children).some(e => e.querySelector('.hash')?.textContent.includes(tx.hash));
+      if (existing) return;
+
+      const li = document.createElement('div');
+      li.className = 'tx-item';
+      li.innerHTML = `
+        <span class="hash">${tx.hash.substring(0, 12)}...</span>
+        <span class="amount">${tx.amount} NOSH</span>
+      `;
+      list.insertBefore(li, list.firstChild);
+      if (list.children.length > 20) list.removeChild(list.lastElementChild);
+    }
+
+    function updateChainState(data) {
+      if (data.blocks) elements.blocks.textContent = data.blocks;
+      if (data.peers) elements.peers.textContent = data.peers;
+      if (data.mempoolSize) elements.mempool.textContent = data.mempoolSize;
+      if (data.uptime) elements.uptime.textContent = formatUptime(data.uptime);
+    }
+
+    function updateSyncState(data) {
+      // Could add sync visualization here
+    }
+
+    function formatUptime(seconds) {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      return h > 0 ? `${h}h ${m}m` : `${m}m`;
+    }
+
+    // Initial fetch
+    document.addEventListener('DOMContentLoaded', async () => {
+      await fetchAPI('/status').then(data => {
+        if (data.blocks) elements.blocks.textContent = data.blocks;
+        if (data.peers) elements.peers.textContent = data.peers;
+        if (data.mempoolSize) elements.mempool.textContent = data.mempoolSize;
+        if (data.uptime) elements.uptime.textContent = formatUptime(data.uptime);
+      });
+
+      fetch('/api/blocks/latest').then(res => res.json()).then(data => {
+        if (data.index) addBlockToList(data);
+      });
+
+      fetch('/api/mempool').then(res => res.json()).then(data => {
+        if (data.total) elements.mempool.textContent = data.total;
+      });
+
+      fetch('/api/peers').then(res => res.json()).then(data => {
+        if (data.peers) elements.peers.textContent = data.peers.length;
+      });
+    });
+
+    // Reconnect on network change
+    window.addEventListener('online', () => {
+      if (!wsConnected) tryReconnect();
+    });
+  </script>
+</body>
+</html>

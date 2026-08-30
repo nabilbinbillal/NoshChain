@@ -1,8 +1,13 @@
-import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { createServer, type IncomingMessage, type ServerResponse, type Server } from "node:http";
 import type { Blockchain } from "./blockchain.js";
 import type { P2PNetwork } from "./p2p.js";
 import type { NodeConfig } from "./config.js";
 import type { Block, Transaction } from "./types.js";
+import { BlockchainWebSocket } from "./websocket.js";
+import { standardRateLimiter } from "./rate-limit-custom.js";
+import { createLogger } from "./logger.js";
+
+const logger = createLogger("Server");
 import {
   WEI_PER_NOSH,
   MIN_FEE,
@@ -29,12 +34,18 @@ function jsonResponse(
     typeof value === "bigint" ? value.toString() : value
   );
 
-  res.writeHead(status, {
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "1; mode=block",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-  });
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Max-Age": "86400",
+  };
+
+  res.writeHead(status, headers);
   res.end(body);
 }
 
@@ -72,19 +83,38 @@ export function createNodeServer(
   config: NodeConfig,
   blockchain: Blockchain,
   p2p: P2PNetwork
-) {
+): { server: Server; ws: BlockchainWebSocket } {
   const isProduction = config.nodeEnv === "production";
-
-  return createServer(async (req, res) => {
+  const server = createServer(async (req, res) => {
     try {
+      // Apply rate limiting to API endpoints
+      if (config.enableRateLimit && req.url?.startsWith("/api/")) {
+        if (!standardRateLimiter.checkLimit(req, res)) {
+          return;
+        }
+        const ip = req.socket.remoteAddress || "unknown";
+        standardRateLimiter.setRateLimitHeaders(res, ip);
+      }
+
       const url = new URL(req.url ?? "/", `http://localhost:${config.port}`);
 
       if (req.method === "OPTIONS") {
-        res.writeHead(204, {
-          "Access-Control-Allow-Origin": "*",
+        const headers: Record<string, string> = {
           "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
-        });
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Max-Age": "86400",
+        };
+
+        if (config.corsOrigins.includes("*")) {
+          headers["Access-Control-Allow-Origin"] = "*";
+        } else {
+          const origin = req.headers.origin;
+          if (origin && config.corsOrigins.includes(origin)) {
+            headers["Access-Control-Allow-Origin"] = origin;
+          }
+        }
+
+        res.writeHead(204, headers);
         res.end();
         return;
       }
@@ -319,4 +349,8 @@ export function createNodeServer(
       return jsonResponse(res, status, { error: errorMessage });
     }
   });
+
+  const ws = new BlockchainWebSocket(server);
+
+  return { server, ws };
 }

@@ -1,6 +1,5 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createServer, type Server } from "node:http";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -38,6 +37,11 @@ function testConfig(dataFile: string): NodeConfig {
     targetBlockTimeMs: 60_000,
     difficultyAdjustmentInterval: 10,
     maxBodySize: 1024 * 1024,
+    logLevel: "error",
+    logDir: "logs",
+    enableWs: false,
+    enableRateLimit: false,
+    corsOrigins: ["*"],
   };
 }
 
@@ -45,11 +49,11 @@ async function withApiServer(
   fn: (baseUrl: string, blockchain: Blockchain) => Promise<void>
 ) {
   const dir = mkdtempSync(join(tmpdir(), "noshchain-api-"));
-  const dataFile = join(dir, "chain.json");
+  const dataFile = join(dir, "chain.db");
   const config = testConfig(dataFile);
   const blockchain = new Blockchain(config);
   const p2p = new P2PNetwork(blockchain);
-  const server: Server = createNodeServer(config, blockchain, p2p);
+  const { server } = createNodeServer(config, blockchain, p2p);
 
   await new Promise<void>((resolve) => server.listen(0, resolve));
   const address = server.address() as AddressInfo;

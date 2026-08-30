@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  noshchain-node1:
+    build: .
+    container_name: noshchain-node1
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+      - DATA_FILE=data/node1.db
+      - DIFFICULTY=2
+      - LOG_LEVEL=info
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    networks:
+      - noshchain-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/status', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  noshchain-node2:
+    build: .
+    container_name: noshchain-node2
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - PEER=http://noshchain-node1:3001
+      - NODE_ENV=production
+      - DATA_FILE=data/node2.db
+      - DIFFICULTY=2
+      - LOG_LEVEL=info
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    networks:
+      - noshchain-network
+    restart: unless-stopped
+    depends_on:
+      - noshchain-node1
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3002/api/status', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  noshchain-node3:
+    build: .
+    container_name: noshchain-node3
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - PEER=http://noshchain-node1:3001,http://noshchain-node2:3002
+      - NODE_ENV=production
+      - DATA_FILE=data/node3.db
+      - DIFFICULTY=2
+      - LOG_LEVEL=info
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    networks:
+      - noshchain-network
+    restart: unless-stopped
+    depends_on:
+      - noshchain-node1
+      - noshchain-node2
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3003/api/status', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  noshchain-network:
+    driver: bridge
+
+volumes:
+  data:
+  logs:

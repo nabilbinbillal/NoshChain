@@ -1,0 +1,109 @@
+# Prompt for Lovable.dev: NoshChain Blockchain Dashboard
+
+## Project Overview
+Build a modern, professional blockchain explorer dashboard for NoshChain - a TypeScript proof-of-work blockchain node. The dashboard should connect to a running NoshChain node at `http://localhost:3001` (or the deployed server URL).
+
+## Key Features Required
+
+### 1. Dashboard Home Page
+- **Header**: NoshChain logo/name with live status indicators
+- **Stats Cards** (top row):
+  - Current block height (with +1 on new blocks)
+  - Number of connected peers
+  - Mempool size (pending transactions)
+  - Network difficulty
+  - Uptime (formatted: "2h 15m" or "online since...")
+- **Real-time updates**: WebSocket connections for live block/transaction updates
+
+### 2. Blocks Section
+- **Latest blocks table/list** showing:
+  - Block height/number
+  - Block hash (first/last 12 chars with ellipsis)
+  - Miner address
+  - Number of transactions
+  - Block reward
+  - Timestamp (relative: "just now", "10m ago", etc.)
+- **Load more** button to fetch older blocks
+- **Block detail page** (clickable) showing full block data
+
+### 3. Transactions/Mempool Section
+- **Pending transactions** from mempool:
+  - Transaction hash (clickable, copyable)
+  - From/To addresses (partial masking for privacy)
+  - Amount in NOSH
+  - Fee in NOSH
+  - Age/relative time
+- **Search/Filter**: Search by hash, address, amount
+- **Transaction detail modal** on click
+
+### 4. Address/Wallet Section
+- **Address lookup**:
+  - Enter any 40-char hex address
+  - Show balance in NOSH and wei
+  - Transaction history for that address
+  - Token balances (if tokens exist)
+- **Generate new wallet** button (calls node API or generates locally)
+
+### 5. Network/Node Info
+- **Node status**: Healthy/Error/Syncing indicator
+- **Monetary info**: Supply, max supply, halving era
+- **Connection status**: Peer connections, WebSocket status
+- **API health**: `/api/health` and `/api/metrics` status badges
+
+### 6. Real-Time Features
+- **WebSocket connection**: `ws://localhost:3001/ws`
+- **Subscribe to**: new blocks, new transactions, mempool changes
+- **Toast notifications** for: new block mined, transaction received, peer connected
+- **Auto-reconnect** with exponential backoff
+
+### 7. Visual Design Requirements
+- **Color scheme**: Nosh gold (#D4AF37) as primary accent, dark theme background
+- **Typography**: Inter or similar modern sans-serif
+- **CSS**: Modern glassmorphism/neomorphism effects where appropriate
+- **Responsive**: Works on mobile (375px) and desktop (1440px)
+- **Animations**: Subtle loading spinners, hover effects, transition animations
+- **No external UI libraries** preferred (pure CSS, no React/Vue dependency unless specified)
+
+### 8. Technical Requirements
+- **Connect to**: `http://localhost:3001/api/*` endpoints
+- **WebSocket**: `ws://localhost:3001/ws`
+- **Fallback**: If node is down, show "Node offline" state gracefully
+- **LocalStorage**: Remember last viewed page, theme preference
+- **Performance**: Lazy-load data, show skeletons during fetch
+- **Accessibility**: ARIA labels, keyboard navigation, color contrast
+
+### 9. Bonus Features (if time permits)
+- **Token balances** view (if tokens created)
+- **Search** across blocks, transactions, addresses
+- **Export data** as CSV/JSON
+- **Dark/Light theme** toggle
+- **Print** friendly block details
+- **Mobile app** view consideration
+
+## Output Format
+Provide the complete solution as:
+1. **HTML file** (single page or multi-page with routing)
+2. **CSS file** (styles, or inline in HTML)
+3. **JavaScript file** (fetch logic, WebSocket handling, state management)
+4. **Installation instructions** for connecting to a running NoshChain node
+5. **Deployment notes** for hosting the dashboard
+
+## Node API Endpoints to Use
+- `GET /api/status` - Node summary
+- `GET /api/blocks/latest` - Latest block
+- `GET /api/blocks?limit=10&offset=0` - Recent blocks
+- `GET /api/mempool` - Pending transactions
+- `GET /api/peers` - Connected peers
+- `GET /api/address/:address` - Address details
+- `GET /api/network` - Monetary information
+- `GET /api/metrics` - System metrics
+- `WS /ws` - WebSocket real-time updates
+
+## Deliverables
+1. Complete dashboard source code (HTML/CSS/JS)
+2. README with how to connect to a NoshChain node
+3. Instructions for deploying the dashboard (static hosting, Docker, etc.)
+4. Note: Dashboard should NOT interfere with the node's test suite (73 tests passing)
+
+---
+*This dashboard is intended to complement the NoshChain blockchain node implementation, providing real-time visualization of the network, blocks, transactions, and node health for monitoring and educational purposes.*

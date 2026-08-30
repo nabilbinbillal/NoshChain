@@ -14,6 +14,8 @@ export type PeerInfo = {
   blocks: number;
   chainWork: string;
   genesisHash: string;
+  tls?: boolean;
+  verified?: boolean;
 };
 
 export class P2PNetwork {
@@ -24,7 +26,10 @@ export class P2PNetwork {
   }
 
   addPeer(url: string): void {
-    this.blockchain.addPeer(url);
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      throw new Error("Peer URL must be http or https");
+    }
+    this.blockchain.addPeer(url.replace(/\/$/, ""));
   }
 
   async fetchPeerChain(peerUrl: string): Promise<Chain> {

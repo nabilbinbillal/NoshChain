@@ -30,6 +30,11 @@ function testConfig(dataFile: string, difficulty?: number): NodeConfig {
     targetBlockTimeMs: 60_000,
     difficultyAdjustmentInterval: 10,
     maxBodySize: 1024 * 1024,
+    logLevel: "error",
+    logDir: "logs",
+    enableWs: false,
+    enableRateLimit: false,
+    corsOrigins: ["*"],
   };
 }
 
@@ -72,7 +77,7 @@ test("higher difficulty requires more work", () => {
 
 test("mined blocks pass validation", () => {
   const dir = mkdtempSync(join(tmpdir(), "noshchain-pow-"));
-  const dataFile = join(dir, "chain.json");
+  const dataFile = join(dir, "chain.db");
 
   try {
     const blockchain = new Blockchain(testConfig(dataFile, 1));

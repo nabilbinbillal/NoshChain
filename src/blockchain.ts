@@ -22,7 +22,8 @@ import {
   formatBalances,
 } from "./state.js";
 import { Mempool } from "./mempool.js";
-import { loadState, saveState } from "./storage.js";
+import { DatabaseStorage, loadStateDb, saveStateDb } from "./storage-db.js";
+import { createLogger } from "./logger.js";
 import type { NodeConfig } from "./config.js";
 
 export function createGenesisBlock(): Block {
@@ -62,13 +63,17 @@ export class Blockchain {
   private peers: Set<string>;
   private operationInProgress = false;
   private readonly config: NodeConfig;
+  private storage: DatabaseStorage;
+  private logger = createLogger("Blockchain");
+  private eventCallbacks: Array<(event: { type: string; data: unknown }) => void> = [];
 
   constructor(config: NodeConfig) {
     this.config = config;
     this.mempool = new Mempool();
     this.peers = new Set(config.peerUrls);
+    this.storage = new DatabaseStorage(config.dataFile);
 
-    const persisted = loadState(config.dataFile);
+    const persisted = this.storage.loadState();
     if (persisted && persisted.chain.length > 0) {
       if (!validChain(persisted.chain, Date.now(), config.initialDifficulty)) {
         throw new Error("Stored blockchain failed validation");
@@ -79,10 +84,26 @@ export class Blockchain {
       for (const peer of persisted.peers) {
         this.peers.add(peer);
       }
+      this.logger.info("Blockchain loaded from database", { blocks: this.chain.length });
     } else {
       this.chain = [createGenesisBlock()];
       this.persist();
+      this.logger.info("Genesis block created");
     }
+  }
+
+  onEvent(callback: (event: { type: string; data: unknown }) => void): void {
+    this.eventCallbacks.push(callback);
+  }
+
+  private emitEvent(event: { type: string; data: unknown }): void {
+    this.eventCallbacks.forEach((callback) => {
+      try {
+        callback(event);
+      } catch (error) {
+        this.logger.error("Event callback error", { error, eventType: event.type });
+      }
+    });
   }
 
   getChain(): Chain {
@@ -140,7 +161,10 @@ export class Blockchain {
   addTransaction(tx: Transaction): void {
     return this.withLock(() => {
       this.mempool.add(tx, this.chain);
+      this.storage.addTransaction(tx, "pending");
       this.persist();
+      this.logger.debug("Transaction added to mempool", { from: tx.from, to: tx.to, amount: tx.amount });
+      this.emitEvent({ type: "transaction", data: tx });
     });
   }
 
@@ -198,6 +222,18 @@ export class Blockchain {
       this.mempool.removeMany(pendingTxs);
       this.persist();
 
+      this.logger.info("Block mined", {
+        height: blockHeight,
+        hash: block.hash,
+        miner,
+        difficulty,
+        transactions: block.transactions.length,
+        reward: reward.toString(),
+      });
+
+      this.emitEvent({ type: "block", data: block });
+      this.emitEvent({ type: "chain", data: { height: blockHeight, hash: block.hash } });
+
       return block;
     });
   }
@@ -238,7 +274,7 @@ export class Blockchain {
   }
 
   private persist(): void {
-    saveState(this.config.dataFile, {
+    this.storage.saveState({
       chain: this.chain,
       mempool: this.mempool.list(),
       peers: this.getPeers(),
@@ -255,5 +291,17 @@ export class Blockchain {
     } finally {
       this.operationInProgress = false;
     }
+  }
+
+  close(): void {
+    this.storage.close();
+  }
+
+  getTransactionsByAddress(address: string): Transaction[] {
+    return this.storage.getTransactionsByAddress(address);
+  }
+
+  getTransactionByHash(txHash: string): Transaction | null {
+    return this.storage.getTransactionByHash(txHash);
   }
 }
