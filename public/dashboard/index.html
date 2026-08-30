@@ -222,13 +222,33 @@ async function loadBlocks(){
   }
 }
 async function loadTxs(){
-  const el=document.getElementById('txPending');el.innerHTML='<div style="padding:24px;text-align:center"><span class="spinner"></span></div>';
-  const r=await api('/mempool');
-  if(r&&r.success){if(!r.data?.transactions?.length)el.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">No pending transactions</div>';else el.innerHTML=r.data.transactions.map(x=>{const t=x.transaction||x;try{return `<div class="row"><div><div class="hash mono">${(x.hash||'').slice(0,16)}…</div><div style="font-size:11px;color:var(--muted)">${fmtAddr(t.from)} → ${fmtAddr(t.to)}</div></div><div style="text-align:right"><div style="font-weight:600">${t.amount?(BigInt(t.amount)/BigInt(1e18)).toString():'0'} NOSH</div><div style="font-size:11px;color:var(--muted)">fee ${t.fee?(BigInt(t.fee)/BigInt(1e15)).toString():'0'} finney</div></div></div>`}catch(e){return `<div class="row"><span style="color:var(--red)">Invalid transaction data</span></div>`}}).join('')}else{el.innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">Failed to load mempool</div>'}
+  try{
+    const el=document.getElementById('txPending');el.innerHTML='<div style="padding:24px;text-align:center"><span class="spinner"></span></div>';
+    const r=await api('/mempool');
+    if(r&&r.success){
+      if(!r.data?.transactions?.length){
+        el.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">No pending transactions</div>';
+      }else{
+        el.innerHTML=r.data.transactions.map(x=>{const t=x.transaction||x;try{return `<div class="row"><div><div class="hash mono">${(x.hash||'').slice(0,16)}…</div><div style="font-size:11px;color:var(--muted)">${fmtAddr(t.from)} → ${fmtAddr(t.to)}</div></div><div style="text-align:right"><div style="font-weight:600">${t.amount?(BigInt(t.amount)/BigInt(1e18)).toString():'0'} NOSH</div><div style="font-size:11px;color:var(--muted)">fee ${t.fee?(BigInt(t.fee)/BigInt(1e15)).toString():'0'} finney</div></div></div>`}catch(e){return `<div class="row"><span style="color:var(--red)">Invalid transaction data</span></div>`}}).join('');
+      }
+    }else{
+      el.innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">Failed to load mempool</div>';
+    }
+  }catch(e){
+    console.error('Mempool load error:',e);
+    document.getElementById('txPending').innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">Error loading mempool</div>';
+  }
 }
 async function lookupTx(){
   const h=document.getElementById('txHash').value.trim();if(!h)return;
-  const r=await api('/transactions/'+h);document.getElementById('txResult').innerHTML=r&&r.success?`<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px"><div class="mono" style="font-size:11px;word-break:break-all">${JSON.stringify(r.data,null,2)}</div></div>`:`<span style="color:var(--red)">${r?r.error.message:'Not found'}</span>`
+  document.getElementById('txResult').innerHTML='<span class="spinner"></span>';
+  const r=await api('/transactions/'+h);
+  if(r&&r.success){
+    const t=r.data;
+    document.getElementById('txResult').innerHTML=`<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px"><div class="modal-row"><span class="modal-label">Hash</span><span class="modal-value mono" style="font-size:11px">${t.hash||'—'}</span></div><div class="modal-row"><span class="modal-label">From</span><span class="modal-value mono" style="font-size:11px">${t.from?.slice(0,20)||'—'}…</span></div><div class="modal-row"><span class="modal-label">To</span><span class="modal-value mono" style="font-size:11px">${t.to?.slice(0,20)||'—'}…</span></div><div class="modal-row"><span class="modal-label">Amount</span><span class="modal-value">${t.amount?(BigInt(t.amount)/BigInt(1e18)).toString():'0'} NOSH</span></div><div class="modal-row"><span class="modal-label">Fee</span><span class="modal-value">${t.fee?(BigInt(t.fee)/BigInt(1e15)).toString():'0'} finney</span></div><div class="modal-row"><span class="modal-label">Status</span><span class="modal-value"><span class="badge badge-green">Confirmed</span></span></div></div>`;
+  }else{
+    document.getElementById('txResult').innerHTML=`<span style="color:var(--red)">${r?r.error.message:'Transaction not found'}</span>`;
+  }
 }
 async function checkBalance(){
   const a=document.getElementById('bAddr').value.trim();if(!a)return;
@@ -266,7 +286,7 @@ async function loadNetwork(){
     const n=await api('/network'),m=await api('/metrics'),p=await api('/peers');
     if(n&&n.success){try{document.getElementById('nReward').textContent=(BigInt(n.data.blockReward||0)/BigInt(1e18)).toString()+' NOSH';document.getElementById('nHalving').textContent=(n.data.blocksUntilNextHalving||0).toLocaleString()}catch(e){document.getElementById('nReward').textContent='—';document.getElementById('nHalving').textContent='—'}}
     if(m&&m.success){try{const d=m.data;document.getElementById('netMetrics').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><span style="color:var(--muted)">Uptime</span><br><b>${Math.floor((d.uptime||0)/60)}m</b></div><div><span style="color:var(--muted)">Heap</span><br><b>${Math.round((d.memory?.heapUsed||0)/1024/1024)} MB</b></div><div><span style="color:var(--muted)">Blocks</span><br><b>${d.blockchain?.blocks||'—'}</b></div><div><span style="color:var(--muted)">Difficulty</span><br><b>${d.blockchain?.difficulty||'—'}</b></div></div>`}catch(e){document.getElementById('netMetrics').innerHTML='<span style="color:var(--red)">Failed to load metrics</span>'}}
-    if(p&&p.success){document.getElementById('netPeers').innerHTML=p.data?.peers?.length? p.data.peers.map(u=>`<div class="row"><span class="mono" style="font-size:12px">${u}</span><span class="badge badge-green">connected</span></div>`).join(''):'<div style="padding:16px;text-align:center;color:var(--muted)">No peers</div>'}else{document.getElementById('netPeers').innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">Failed to load peers</div>'}
+    if(p&&p.success){document.getElementById('netPeers').innerHTML=p.data?.peers?.length? p.data.peers.map(u=>`<div class="row"><span class="mono" style="font-size:12px">${u}</span><span class="badge badge-green">connected</span></div>`).join(''):'<div style="padding:16px;text-align:center;color:var(--muted)">No peers connected (single node)</div>'}else{document.getElementById('netPeers').innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">Failed to load peers</div>'}
   }catch(e){
     console.error('Network load error:',e);
     document.getElementById('netMetrics').innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">API Offline</div>';
@@ -315,11 +335,11 @@ async function showBlockDetails(height, hash){
       modalBody.innerHTML=`
         <div class="modal-row"><span class="modal-label">Block Height</span><span class="modal-value">#${b.height}</span></div>
         <div class="modal-row"><span class="modal-label">Hash</span><span class="modal-value mono">${b.hash||'—'}</span></div>
-        <div class="modal-row"><span class="modal-label">Previous Hash</span><span class="modal-value mono">${b.previousHash?.slice(0,20)||'—'}…</span></div>
+        <div class="modal-row"><span class="modal-label">Previous Hash</span><span class="modal-value mono">${b.previousHash||'—'}</span></div>
         <div class="modal-row"><span class="modal-label">Timestamp</span><span class="modal-value mono">${b.timestamp?new Date(b.timestamp).toLocaleString():'—'}</span></div>
         <div class="modal-row"><span class="modal-label">Transactions</span><span class="modal-value">${b.transactionCount||0}</span></div>
         <div class="modal-row"><span class="modal-label">Difficulty</span><span class="modal-value">${b.difficulty||'—'}</span></div>
-        <div class="modal-row"><span class="modal-label">Miner</span><span class="modal-value mono">${b.miner?.slice(0,10)||'—'}…</span></div>
+        <div class="modal-row"><span class="modal-label">Miner</span><span class="modal-value mono">${b.miner||'—'}</span></div>
         <div class="modal-row"><span class="modal-label">Nonce</span><span class="modal-value mono">${b.nonce||'—'}</span></div>
       `;
     }else{
