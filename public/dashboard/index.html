@@ -53,6 +53,7 @@ body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);min-hei
 @media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.wallet-grid{grid-template-columns:1fr}}
 @media(max-width:640px){.topbar{height:auto;padding:12px 16px;flex-wrap:wrap;gap:12px}.nav{width:100%;overflow-x:auto;scrollbar-width:none}.nav::-webkit-scrollbar{display:none}.stats{grid-template-columns:1fr 1fr;gap:12px}.stat{padding:14px}.stat strong{font-size:20px}.hero{padding:20px}.hero h1{font-size:22px}.wrap{padding:16px}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
 <div class="topbar">
@@ -75,6 +76,13 @@ body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);min-hei
       <div class="stat"><label>Peers</label><strong id="sPeers">—</strong><small>connected</small></div>
       <div class="stat"><label>Mempool</label><strong id="sMempool">—</strong><small>pending</small></div>
       <div class="stat"><label>Difficulty</label><strong id="sDiff">—</strong><small>leading zeros</small></div>
+    </div>
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-head">📈 Real-time Analytics <span style="font-size:11px;color:var(--green)">● Live</span></div>
+      <div class="card-body" style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div><canvas id="chartBlocks" height="140"></canvas></div>
+        <div><canvas id="chartMempool" height="140"></canvas></div>
+      </div>
     </div>
     <div class="grid2">
       <div class="card"><div class="card-head">Latest Blocks <span onclick="showPage('blocks')">View all →</span></div><div class="card-body" id="dashBlocks"><div style="padding:24px;text-align:center;color:var(--muted);font-size:13px">Loading...</div></div></div>
@@ -145,6 +153,32 @@ async function loadNetwork(){
   if(m&&m.success){const d=m.data;document.getElementById('netMetrics').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><span style="color:var(--muted)">Uptime</span><br><b>${Math.floor(d.uptime/60)}m</b></div><div><span style="color:var(--muted)">Heap</span><br><b>${Math.round(d.memory.heapUsed/1024/1024)} MB</b></div><div><span style="color:var(--muted)">Blocks</span><br><b>${d.blockchain.blocks}</b></div><div><span style="color:var(--muted)">Difficulty</span><br><b>${d.blockchain.difficulty}</b></div></div>`}
   if(p&&p.success){document.getElementById('netPeers').innerHTML=p.data.peers.length? p.data.peers.map(u=>`<div class="row"><span class="mono" style="font-size:12px">${u}</span><span class="badge badge-green">connected</span></div>`).join(''):'<div style="padding:16px;text-align:center;color:var(--muted)">No peers</div>'}
 }
+let chartB, chartM;
+function initCharts(){
+  const ctxB=document.getElementById('chartBlocks');
+  const ctxM=document.getElementById('chartMempool');
+  if(!ctxB||!ctxM||typeof Chart==='undefined') return;
+  chartB=new Chart(ctxB,{type:'line',data:{labels:[],datasets:[{label:'Blocks',data:[],borderColor:'#D4AF37',backgroundColor:'rgba(212,175,55,.1)',tension:.4,fill:true,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{beginAtZero:true,grid:{color:'rgba(37,42,60,.5)'},ticks:{color:'#8B8FA3',font:{size:10}}}}}});
+  chartM=new Chart(ctxM,{type:'bar',data:{labels:[],datasets:[{label:'Mempool',data:[],backgroundColor:'rgba(14,203,129,.6)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{beginAtZero:true,grid:{color:'rgba(37,42,60,.5)'},ticks:{color:'#8B8FA3',font:{size:10}}}}}});
+}
+function pushChart(c, label, value){
+  if(!c) return;
+  c.data.labels.push(label);
+  c.data.datasets[0].data.push(value);
+  if(c.data.labels.length>20){c.data.labels.shift();c.data.datasets[0].data.shift();}
+  c.update('none');
+}
+const _origLoadDashboard = loadDashboard;
+loadDashboard = async function(){
+  await _origLoadDashboard();
+  const s=await api('/status');
+  if(s&&s.success){
+    const now=new Date().toLocaleTimeString().slice(0,5);
+    pushChart(chartB, now, s.data.blocks);
+    pushChart(chartM, now, s.data.mempoolSize);
+  }
+};
+document.addEventListener('DOMContentLoaded', ()=>{setTimeout(initCharts,500)});
 loadDashboard();loadNetwork();
 setInterval(loadDashboard,5000);
 </script>
