@@ -278,8 +278,8 @@ function initCharts(){
   try{
     const cB=document.getElementById('chartBlocks'), cM=document.getElementById('chartMempool');
     if(!cB||!cM||typeof Chart==='undefined') return;
-    chartB=new Chart(cB,{type:'line',data:{labels:[],datasets:[{label:'Blocks',data:[],borderColor:'#D4AF37',backgroundColor:'rgba(212,175,55,.15)',tension:.4,fill:true,pointRadius:4,pointHoverRadius:8,pointBackgroundColor:'#D4AF37',pointBorderColor:'#fff',pointBorderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:true,backgroundColor:'var(--card)',titleColor:'var(--text)',bodyColor:'var(--muted)', titleFont:{size:13,weight:600},bodyFont:{size:12},padding:12,displayColors:false,cornerRadius:8,callbacks:{label:function(context){return 'Blocks: '+context.parsed.y}}}},scales:{x:{display:false},y:{beginAtZero:true,grid:{color:'rgba(37,42,60,.5)'},ticks:{color:'#8B8FA3',font:{size:10}}}},interaction:{intersect:false,mode:'index'}}});
-    chartM=new Chart(cM,{type:'bar',data:{labels:[],datasets:[{label:'Mempool',data:[],backgroundColor:'rgba(14,203,129,.6)',borderRadius:4,hoverBackgroundColor:'rgba(14,203,129,.8)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:true,backgroundColor:'var(--card)',titleColor:'var(--text)',bodyColor:'var(--muted)', titleFont:{size:13,weight:600},bodyFont:{size:12},padding:12,displayColors:false,cornerRadius:8,callbacks:{label:function(context){return 'Mempool: '+context.parsed.y+' txs'}}}},scales:{x:{display:false},y:{beginAtZero:true,grid:{color:'rgba(37,42,60,.5)'},ticks:{color:'#8B8FA3',font:{size:10}}}},interaction:{intersect:false,mode:'index'}}});
+    chartB=new Chart(cB,{type:'line',data:{labels:[],datasets:[{label:'Blocks',data:[],borderColor:'#D4AF37',backgroundColor:'rgba(212,175,55,.15)',tension:.4,fill:true,pointRadius:4,pointHoverRadius:8,pointBackgroundColor:'#D4AF37',pointBorderColor:'#fff',pointBorderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:true,backgroundColor:'#151821',titleColor:'#E6E8EC',bodyColor:'#8B8FA3', titleFont:{size:13,weight:600},bodyFont:{size:12},padding:12,displayColors:false,cornerRadius:8,borderColor:'#252A3C',borderWidth:1,callbacks:{label:function(context){return 'Blocks: '+context.parsed.y}}}},scales:{x:{display:false},y:{beginAtZero:true,grid:{color:'rgba(37,42,60,.5)'},ticks:{color:'#8B8FA3',font:{size:10}}}},interaction:{intersect:false,mode:'index'}}});
+    chartM=new Chart(cM,{type:'bar',data:{labels:[],datasets:[{label:'Mempool',data:[],backgroundColor:'rgba(14,203,129,.6)',borderRadius:4,hoverBackgroundColor:'rgba(14,203,129,.8)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:true,backgroundColor:'#151821',titleColor:'#E6E8EC',bodyColor:'#8B8FA3', titleFont:{size:13,weight:600},bodyFont:{size:12},padding:12,displayColors:false,cornerRadius:8,borderColor:'#252A3C',borderWidth:1,callbacks:{label:function(context){return 'Mempool: '+context.parsed.y+' txs'}}}},scales:{x:{display:false},y:{beginAtZero:true,grid:{color:'rgba(37,42,60,.5)'},ticks:{color:'#8B8FA3',font:{size:10}}}},interaction:{intersect:false,mode:'index'}}});
   }catch(e){console.log('charts init',e)}
 }
 function updateCharts(blocks, mempool){
@@ -308,19 +308,23 @@ async function showBlockDetails(height, hash){
   modalTitle.textContent=`Block #${height}`;
   modalBody.innerHTML='<div style="padding:24px;text-align:center"><span class="spinner"></span></div>';
   modal.classList.add('active');
-  const r=await api('/blocks?limit=1&offset=0');
+  const r=await api('/blocks?limit=50&offset=0');
   if(r&&r.success&&r.data?.blocks?.length){
-    const b=r.data.blocks.find(block=>block.hash===hash)||r.data.blocks[0];
-    modalBody.innerHTML=`
-      <div class="modal-row"><span class="modal-label">Block Height</span><span class="modal-value">#${b.height}</span></div>
-      <div class="modal-row"><span class="modal-label">Hash</span><span class="modal-value mono">${b.hash||'—'}</span></div>
-      <div class="modal-row"><span class="modal-label">Previous Hash</span><span class="modal-value mono">${b.previousHash?.slice(0,20)||'—'}…</span></div>
-      <div class="modal-row"><span class="modal-label">Timestamp</span><span class="modal-value mono">${b.timestamp?new Date(b.timestamp).toLocaleString():'—'}</span></div>
-      <div class="modal-row"><span class="modal-label">Transactions</span><span class="modal-value">${b.transactionCount||0}</span></div>
-      <div class="modal-row"><span class="modal-label">Difficulty</span><span class="modal-value">${b.difficulty||'—'}</span></div>
-      <div class="modal-row"><span class="modal-label">Miner</span><span class="modal-value mono">${b.miner||'—'}</span></div>
-      <div class="modal-row"><span class="modal-label">Nonce</span><span class="modal-value mono">${b.nonce||'—'}</span></div>
-    `;
+    const b=r.data.blocks.find(block=>block.hash===hash);
+    if(b){
+      modalBody.innerHTML=`
+        <div class="modal-row"><span class="modal-label">Block Height</span><span class="modal-value">#${b.height}</span></div>
+        <div class="modal-row"><span class="modal-label">Hash</span><span class="modal-value mono">${b.hash||'—'}</span></div>
+        <div class="modal-row"><span class="modal-label">Previous Hash</span><span class="modal-value mono">${b.previousHash?.slice(0,20)||'—'}…</span></div>
+        <div class="modal-row"><span class="modal-label">Timestamp</span><span class="modal-value mono">${b.timestamp?new Date(b.timestamp).toLocaleString():'—'}</span></div>
+        <div class="modal-row"><span class="modal-label">Transactions</span><span class="modal-value">${b.transactionCount||0}</span></div>
+        <div class="modal-row"><span class="modal-label">Difficulty</span><span class="modal-value">${b.difficulty||'—'}</span></div>
+        <div class="modal-row"><span class="modal-label">Miner</span><span class="modal-value mono">${b.miner?.slice(0,10)||'—'}…</span></div>
+        <div class="modal-row"><span class="modal-label">Nonce</span><span class="modal-value mono">${b.nonce||'—'}</span></div>
+      `;
+    }else{
+      modalBody.innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">Block not found in recent blocks</div>';
+    }
   }else{
     modalBody.innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">Failed to load block details</div>';
   }
