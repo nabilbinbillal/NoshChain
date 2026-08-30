@@ -156,6 +156,33 @@ export async function handleApiRequest(
       return true;
     }
 
+    if (req.method === "GET" && url.pathname === "/api/health") {
+      const uptime = process.uptime();
+      const mem = process.memoryUsage();
+      sendSuccess(res, 200, {
+        status: "healthy",
+        uptime: Math.floor(uptime),
+        memory: { heapUsed: Math.round(mem.heapUsed/1024/1024), heapTotal: Math.round(mem.heapTotal/1024/1024), rss: Math.round(mem.rss/1024/1024) },
+        blockchain: { blocks: chain.length, mempoolSize: mempool.length, peers: ctx.p2p.getPeerUrls().length, latestBlock: { height: latest.index, hash: latest.hash, timestamp: latest.timestamp } },
+        timestamp: Date.now()
+      });
+      return true;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/metrics") {
+      const mem = process.memoryUsage();
+      const cpu = process.cpuUsage();
+      sendSuccess(res, 200, {
+        timestamp: Date.now(),
+        uptime: process.uptime(),
+        memory: { heapUsed: mem.heapUsed, heapTotal: mem.heapTotal, external: mem.external, rss: mem.rss },
+        cpu: { user: cpu.user, system: cpu.system },
+        blockchain: { blocks: chain.length, chainWork: getChainWork(chain).toString(), mempoolSize: mempool.length, peerCount: ctx.p2p.getPeerUrls().length, latestBlockHeight: latest.index, latestBlockTimestamp: latest.timestamp, difficulty: latest.difficulty },
+        network: { chainId: CHAIN_ID_STRING, genesisHash: ctx.blockchain.getGenesisHash() }
+      });
+      return true;
+    }
+
     if (req.method === "GET" && url.pathname === "/api/network") {
       sendSuccess(res, 200, {
         network: NETWORK_NAME,
