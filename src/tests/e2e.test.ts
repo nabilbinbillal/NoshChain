@@ -111,17 +111,17 @@ test("end-to-end two-node network", async () => {
 
   try {
     node1 = await startNode(
-      3001,
-      "http://localhost:3002",
+      3011,
+      "http://localhost:3012",
       "data/e2e-node1.json"
     );
     node2 = await startNode(
-      3002,
-      "http://localhost:3001",
+      3012,
+      "http://localhost:3011",
       "data/e2e-node2.json"
     );
 
-    const node1Info = (await fetchJSON("http://localhost:3001/")) as {
+    const node1Info = (await fetchJSON("http://localhost:3011/")) as {
       chainId: string;
       decimals: number;
       coin: string;
@@ -138,12 +138,12 @@ test("end-to-end two-node network", async () => {
 
     const genesisBalance = BigInt(
       ((await fetchJSON(
-        `http://localhost:3001/balance/${GENESIS_ALLOCATION.address}`
+        `http://localhost:3011/balance/${GENESIS_ALLOCATION.address}`
       )) as { balance: string }).balance
     );
     assert.equal(genesisBalance, 21_000_000n * WEI_PER_NOSH);
 
-    const mine1 = await fetch("http://localhost:3001/mine", {
+    const mine1 = await fetch("http://localhost:3011/mine", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ miner: aliceWallet.address }),
@@ -154,7 +154,7 @@ test("end-to-end two-node network", async () => {
 
     const aliceBalance = BigInt(
       ((await fetchJSON(
-        `http://localhost:3001/balance/${aliceWallet.address}`
+        `http://localhost:3011/balance/${aliceWallet.address}`
       )) as { balance: string }).balance
     );
     assert.equal(aliceBalance, BLOCK_REWARD);
@@ -167,7 +167,7 @@ test("end-to-end two-node network", async () => {
       bobWallet.address,
       transferAmount,
       fee,
-      "http://localhost:3001"
+      "http://localhost:3011"
     );
     assert.equal(txResponse.status, 201);
     assert.equal(txData.message, "Transaction accepted");
@@ -175,12 +175,12 @@ test("end-to-end two-node network", async () => {
     // Transaction is in mempool until mined
     const bobBeforeMine = BigInt(
       ((await fetchJSON(
-        `http://localhost:3001/balance/${bobWallet.address}`
+        `http://localhost:3011/balance/${bobWallet.address}`
       )) as { balance: string }).balance
     );
     assert.equal(bobBeforeMine, 0n);
 
-    const mine2 = await fetch("http://localhost:3001/mine", {
+    const mine2 = await fetch("http://localhost:3011/mine", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ miner: bobWallet.address }),
@@ -189,12 +189,12 @@ test("end-to-end two-node network", async () => {
 
     const aliceAfter = BigInt(
       ((await fetchJSON(
-        `http://localhost:3001/balance/${aliceWallet.address}`
+        `http://localhost:3011/balance/${aliceWallet.address}`
       )) as { balance: string }).balance
     );
     const bobAfter = BigInt(
       ((await fetchJSON(
-        `http://localhost:3001/balance/${bobWallet.address}`
+        `http://localhost:3011/balance/${bobWallet.address}`
       )) as { balance: string }).balance
     );
 
@@ -205,16 +205,16 @@ test("end-to-end two-node network", async () => {
     assert.equal(bobAfter, WEI_PER_NOSH + calculateBlockReward(2) + MIN_FEE);
 
     const syncResult = (await fetchJSON(
-      "http://localhost:3002/sync"
+      "http://localhost:3012/sync"
     )) as { message: string; blocks: number };
 
     assert.equal(syncResult.message, "Chain synchronized");
     assert.equal(syncResult.blocks, 3);
 
-    const chain1 = ((await fetchJSON("http://localhost:3001/chain")) as {
+    const chain1 = ((await fetchJSON("http://localhost:3011/chain")) as {
       chain: { hash: string }[];
     }).chain;
-    const chain2 = ((await fetchJSON("http://localhost:3002/chain")) as {
+    const chain2 = ((await fetchJSON("http://localhost:3012/chain")) as {
       chain: { hash: string }[];
     }).chain;
 
@@ -229,7 +229,7 @@ test("end-to-end two-node network", async () => {
       bobWallet.address,
       (100_000_000n * WEI_PER_NOSH).toString(),
       fee,
-      "http://localhost:3001"
+      "http://localhost:3011"
     );
     assert.equal(invalidSend.response.status, 400);
 
@@ -244,7 +244,7 @@ test("end-to-end two-node network", async () => {
       1
     );
     const lowFeeResponse = await fetch(
-      "http://localhost:3001/transaction",
+      "http://localhost:3011/transaction",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -254,7 +254,7 @@ test("end-to-end two-node network", async () => {
     assert.equal(lowFeeResponse.status, 400);
 
     const networkInfo = (await fetchJSON(
-      "http://localhost:3001/network"
+      "http://localhost:3011/network"
     )) as { maxSupply: string; genesisAllocation: string };
     assert.ok(BigInt(networkInfo.maxSupply) > BigInt(networkInfo.genesisAllocation));
     assert.equal(BigInt(networkInfo.maxSupply) / WEI_PER_NOSH, CANONICAL_MAX_SUPPLY_NOSH);
@@ -263,13 +263,13 @@ test("end-to-end two-node network", async () => {
     node1.kill();
     await delay(500);
     node1 = await startNode(
-      3001,
-      "http://localhost:3002",
+      3011,
+      "http://localhost:3012",
       "data/e2e-node1.json"
     );
 
     const restartedChain = ((await fetchJSON(
-      "http://localhost:3001/chain"
+      "http://localhost:3011/chain"
     )) as { blocks: number }).blocks;
     assert.equal(restartedChain, 3);
   } finally {

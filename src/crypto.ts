@@ -14,9 +14,20 @@ export function sha256(data: string): string {
   return createHash("sha256").update(data).digest("hex");
 }
 
-export function transactionMessage(
-  tx: Omit<Transaction, "signature" | "publicKey">
-): string {
+export function transactionMessage(tx: {
+  chainId: string;
+  from: string;
+  to: string;
+  amount: string;
+  fee: string;
+  nonce: number;
+  tokenId?: string;
+  tokenAction?: "transfer" | "create";
+  tokenName?: string;
+  tokenSymbol?: string;
+  tokenDecimals?: number;
+  tokenSupply?: string;
+}): string {
   return JSON.stringify({
     chainId: tx.chainId,
     from: tx.from,
@@ -24,6 +35,12 @@ export function transactionMessage(
     amount: tx.amount,
     fee: tx.fee,
     nonce: tx.nonce,
+    tokenId: tx.tokenId ?? null,
+    tokenAction: tx.tokenAction ?? null,
+    tokenName: tx.tokenName ?? null,
+    tokenSymbol: tx.tokenSymbol ?? null,
+    tokenDecimals: tx.tokenDecimals ?? null,
+    tokenSupply: tx.tokenSupply ?? null,
   });
 }
 

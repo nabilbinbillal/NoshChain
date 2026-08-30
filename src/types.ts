@@ -7,6 +7,36 @@ export type Transaction = {
   signature: string;
   publicKey: string;
   chainId: string;
+
+  /*
+   * Optional token transaction fields.
+   *
+   * Native transaction:
+   *   tokenId absent
+   *   amount = native NOSH amount
+   *
+   * Token transaction:
+   *   tokenId present
+   *   amount = token amount
+   *   fee = native NOSH fee
+   */
+  tokenId?: string;
+  tokenAction?: "create" | "transfer";
+  tokenName?: string;
+  tokenSymbol?: string;
+  tokenDecimals?: number;
+  tokenSupply?: string;
+};
+
+export type Token = {
+  id: string;
+  name: string;
+  symbol: string;
+  decimals: number;
+  totalSupply: string;
+  creator: string;
+  createdAt: number;
+  creationTx: string;
 };
 
 export type Block = {
@@ -29,23 +59,21 @@ export type PersistedState = {
   peers: string[];
 };
 
-// Network identification
 export const CHAIN_ID = 13371337n;
-export const NETWORK_NAME = "noshchain-testnet" as const;
+export const NETWORK_NAME = "noshchain" as const;
 export const CHAIN_ID_STRING = CHAIN_ID.toString();
 
-// System senders
 export const GENESIS_SENDER = "GENESIS" as const;
 export const MINING_REWARD_SENDER = "MINING_REWARD" as const;
 
-// Monetary constants (18 decimals)
 export const WEI_PER_NOSH = 10n ** 18n;
+
 export const INITIAL_SUPPLY = 21_000_000n * WEI_PER_NOSH;
 export const BLOCK_REWARD = 50n * WEI_PER_NOSH;
 export const HALVING_INTERVAL = 2_102_400;
-export const MIN_FEE = 1_000_000_000_000_000n; // 0.001 NOSH
 
-// Consensus constants
+export const MIN_FEE = 1_000_000_000_000_000n;
+
 export const INITIAL_DIFFICULTY = 2;
 export const TARGET_BLOCK_TIME_MS = 60_000;
 export const DIFFICULTY_ADJUSTMENT_INTERVAL = 10;
@@ -54,10 +82,11 @@ export const MAX_BLOCK_DRIFT_MS = 2 * 60 * 60_000;
 
 export function configuredInitialDifficulty(): number {
   const value = Number(process.env.DIFFICULTY ?? INITIAL_DIFFICULTY);
-  return Number.isFinite(value) && value >= 1 ? value : INITIAL_DIFFICULTY;
+  return Number.isFinite(value) && value >= 1
+    ? value
+    : INITIAL_DIFFICULTY;
 }
 
-// Deterministic genesis
 export const GENESIS_TIMESTAMP = 1_704_067_200_000;
 export const GENESIS_PREVIOUS_HASH = "0";
 

@@ -5,6 +5,7 @@ import {
   INITIAL_SUPPLY,
 } from "./types.js";
 import { calculateIssuedMiningSupply } from "./crypto.js";
+import { isTokenTransaction, validateTokenTransfers } from "./tokens.js";
 
 export type BalanceMap = Record<string, bigint>;
 export type NonceMap = Record<string, number>;
@@ -32,14 +33,25 @@ export function calculateBalances(chain: Chain): BalanceMap {
       }
 
       const fromBalance = result[tx.from] ?? 0n;
-      const totalCost = amount + fee;
-      if (fromBalance < totalCost) {
+
+      /*
+       * Token transfers use `amount` for the token quantity.
+       * Only the native NOSH fee is deducted from the native balance.
+       */
+      const nativeCost = isTokenTransaction(tx) ? fee : amount + fee;
+
+      if (fromBalance < nativeCost) {
         throw new Error(
           `Negative balance for ${tx.from} at block ${block.index}`
         );
       }
-      result[tx.from] = fromBalance - totalCost;
-      result[tx.to] = (result[tx.to] ?? 0n) + amount;
+
+      result[tx.from] = fromBalance - nativeCost;
+
+      if (!isTokenTransaction(tx)) {
+        result[tx.to] = (result[tx.to] ?? 0n) + amount;
+      }
+
       totalFees += fee;
     }
 
@@ -101,6 +113,11 @@ export function validateChainState(chain: Chain): boolean {
   try {
     calculateBalances(chain);
     calculateNonces(chain);
+
+    if (!validateTokenTransfers(chain)) {
+      return false;
+    }
+
     return calculateTotalSupply(chain) === calculateIssuedSupply(chain);
   } catch {
     return false;

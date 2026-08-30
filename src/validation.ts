@@ -24,6 +24,7 @@ import {
   getChainWork,
 } from "./crypto.js";
 import { validateChainState } from "./state.js";
+import { tokenIdFromCreation, isTokenTransaction, isTokenCreationTransaction, validateTokenId, validateTokenAmount, tokenFeeIsValid, validateTokenMetadata } from "./tokens.js";
 
 export function validateAddress(address: string): boolean {
   return /^[0-9a-f]{40}$/.test(address);
@@ -80,12 +81,92 @@ export function verifyTransaction(tx: Transaction): boolean {
       return false;
     }
 
-    if (!validateAmount(tx.amount) || !validateFee(tx.fee)) {
+    if (!validateFee(tx.fee) || !validateNonce(tx.nonce)) {
       return false;
     }
 
-    if (!validateNonce(tx.nonce)) {
-      return false;
+    const isCreation = isTokenCreationTransaction(tx);
+    const isToken = isTokenTransaction(tx);
+
+    /*
+     * Native transfers require amount > 0.
+     * Token creation is the sole valid transaction type with amount = 0.
+     */
+    if (isCreation) {
+      if (tx.amount !== "0") {
+        return false;
+      }
+
+      if (!validateTokenId(tx.tokenId!)) {
+        return false;
+      }
+
+      const metadataError = validateTokenMetadata({
+        name: tx.tokenName!,
+        symbol: tx.tokenSymbol!,
+        decimals: tx.tokenDecimals!,
+        totalSupply: tx.tokenSupply!,
+        creator: tx.from,
+      });
+
+      if (metadataError) {
+        return false;
+      }
+
+      /*
+       * Token IDs are content-derived. This prevents a creator from
+       * choosing arbitrary IDs and makes the protocol deterministic.
+       */
+      const expectedTokenId = tokenIdFromCreation(
+        tx.from,
+        tx.tokenName!,
+        tx.tokenSymbol!,
+        tx.tokenSupply!,
+        tx.tokenDecimals!,
+        tx.nonce
+      );
+
+      if (tx.tokenId !== expectedTokenId) {
+        return false;
+      }
+
+      if (!tokenFeeIsValid(tx, MIN_FEE)) {
+        return false;
+      }
+    } else if (isToken) {
+      if (!validateTokenId(tx.tokenId!)) {
+        return false;
+      }
+
+      if (tx.tokenAction !== "transfer") {
+        return false;
+      }
+
+      if (!validateTokenAmount(tx.amount)) {
+        return false;
+      }
+
+      if (!tokenFeeIsValid(tx, MIN_FEE)) {
+        return false;
+      }
+    } else {
+      if (!validateAmount(tx.amount)) {
+        return false;
+      }
+
+      /*
+       * Native transactions must not carry token fields.
+       */
+      if (
+        tx.tokenId !== undefined ||
+        tx.tokenAction !== undefined ||
+        tx.tokenName !== undefined ||
+        tx.tokenSymbol !== undefined ||
+        tx.tokenDecimals !== undefined ||
+        tx.tokenSupply !== undefined
+      ) {
+        return false;
+      }
     }
 
     const publicKey = createPublicKey(tx.publicKey);
@@ -96,7 +177,7 @@ export function verifyTransaction(tx: Transaction): boolean {
       return false;
     }
 
-    const unsigned = {
+    const unsigned: Parameters<typeof transactionMessage>[0] = {
       chainId: tx.chainId,
       from: tx.from,
       to: tx.to,
@@ -104,6 +185,13 @@ export function verifyTransaction(tx: Transaction): boolean {
       fee: tx.fee,
       nonce: tx.nonce,
     };
+
+    if (tx.tokenId !== undefined) unsigned.tokenId = tx.tokenId;
+    if (tx.tokenAction !== undefined) unsigned.tokenAction = tx.tokenAction;
+    if (tx.tokenName !== undefined) unsigned.tokenName = tx.tokenName;
+    if (tx.tokenSymbol !== undefined) unsigned.tokenSymbol = tx.tokenSymbol;
+    if (tx.tokenDecimals !== undefined) unsigned.tokenDecimals = tx.tokenDecimals;
+    if (tx.tokenSupply !== undefined) unsigned.tokenSupply = tx.tokenSupply;
 
     const verifier = createVerify("SHA256");
     verifier.update(transactionMessage(unsigned));
@@ -294,6 +382,10 @@ export function verifyBlock(
     }
 
     if (!verifyTransaction(tx)) {
+      return false;
+    }
+
+    if (isTokenTransaction(tx) && !validateTokenId(tx.tokenId!)) {
       return false;
     }
   }

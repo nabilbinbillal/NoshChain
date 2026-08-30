@@ -18,6 +18,8 @@ import {
 import { getMonetaryInfo, getNetworkStats } from "./monetary.js";
 import { sendError, sendSuccess } from "./responses.js";
 import { transactionHash } from "./transaction-id.js";
+import { createHash } from "node:crypto";
+import { getAllTokens, getToken, getTokenBalance, validateTokenMetadata, tokenIdFromCreation } from "../tokens.js";
 
 export type ApiContext = {
   config: NodeConfig;
@@ -244,6 +246,145 @@ export async function handleApiRequest(
         latestHash: latest.hash,
         chain,
       });
+      return true;
+    }
+
+
+    /*
+     * ============================================================
+     * TOKEN API
+     * ============================================================
+     */
+
+    if (req.method === "GET" && url.pathname === "/api/tokens") {
+      sendSuccess(res, 200, {
+        tokens: getAllTokens(chain),
+        count: getAllTokens(chain).length,
+      });
+      return true;
+    }
+
+    const tokenMatch = url.pathname.match(
+      /^\/api\/tokens\/([0-9a-f]{64})$/
+    );
+
+    if (req.method === "GET" && tokenMatch) {
+      const tokenId = tokenMatch[1]!;
+      const token = getToken(chain, tokenId);
+
+      if (!token) {
+        sendError(res, 404, "TOKEN_NOT_FOUND", "Token not found");
+        return true;
+      }
+
+      sendSuccess(res, 200, token);
+      return true;
+    }
+
+    const tokenBalanceMatch = url.pathname.match(
+      /^\/api\/tokens\/([0-9a-f]{64})\/balance\/([0-9a-f]{40})$/
+    );
+
+    if (req.method === "GET" && tokenBalanceMatch) {
+      const tokenId = tokenBalanceMatch[1]!;
+      const address = tokenBalanceMatch[2]!;
+
+      const token = getToken(chain, tokenId);
+
+      if (!token) {
+        sendError(res, 404, "TOKEN_NOT_FOUND", "Token not found");
+        return true;
+      }
+
+      sendSuccess(res, 200, {
+        tokenId,
+        address,
+        balance: getTokenBalance(chain, tokenId, address).toString(),
+        decimals: token.decimals,
+        symbol: token.symbol,
+      });
+
+      return true;
+    }
+
+    const createTokenMatch =
+      req.method === "POST" &&
+      url.pathname === "/api/tokens/create";
+
+    if (createTokenMatch) {
+      const body = await readBody(req, ctx.config.maxBodySize) as {
+        name?: string;
+        symbol?: string;
+        decimals?: number;
+        totalSupply?: string;
+        creator?: string;
+        fee?: string;
+        nonce?: number;
+        signature?: string;
+        publicKey?: string;
+      };
+
+      if (
+        typeof body.name !== "string" ||
+        typeof body.symbol !== "string" ||
+        typeof body.decimals !== "number" ||
+        typeof body.totalSupply !== "string" ||
+        typeof body.creator !== "string"
+      ) {
+        sendError(
+          res,
+          400,
+          "INVALID_TOKEN",
+          "name, symbol, decimals, totalSupply and creator are required"
+        );
+        return true;
+      }
+
+      const metadataError = validateTokenMetadata({
+        name: body.name,
+        symbol: body.symbol,
+        decimals: body.decimals,
+        totalSupply: body.totalSupply,
+        creator: body.creator,
+      });
+
+      if (metadataError) {
+        sendError(res, 400, "INVALID_TOKEN", metadataError);
+        return true;
+      }
+
+      const nonce =
+        typeof body.nonce === "number"
+          ? body.nonce
+          : ctx.blockchain.getNonce(body.creator);
+
+      const tokenId = tokenIdFromCreation(
+        body.creator,
+        body.name,
+        body.symbol,
+        body.totalSupply,
+        body.decimals,
+        nonce
+      );
+
+      const token = {
+        id: tokenId,
+        name: body.name,
+        symbol: body.symbol,
+        decimals: body.decimals,
+        totalSupply: body.totalSupply,
+        creator: body.creator,
+        createdAt: Date.now(),
+      };
+
+      sendSuccess(res, 201, {
+        message:
+          "Token specification created. Token creation transactions are accepted through the signed transaction API.",
+        token,
+        nextStep:
+          "Use POST /api/transactions with tokenAction=create and the returned tokenId.",
+      });
+
       return true;
     }
 

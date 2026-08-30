@@ -20,6 +20,7 @@ import {
   verifyGenesisBlock,
   verifyBlock,
   compareChains,
+  verifyTransaction,
 } from "../validation.js";
 import { calculateBlockReward, blockHash, meetsDifficulty } from "../crypto.js";
 import { saveState } from "../storage.js";

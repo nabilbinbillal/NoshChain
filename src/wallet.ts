@@ -65,7 +65,8 @@ export class NoshWallet {
     to: string,
     amount: string,
     fee: string,
-    nonce: number
+    nonce: number,
+    extra: Partial<Transaction> = {}
   ): Transaction {
     if (from !== this.address) {
       throw new Error("Invalid sender address");
@@ -78,6 +79,7 @@ export class NoshWallet {
       amount,
       fee,
       nonce,
+      ...extra,
     };
 
     const signer = createSign("SHA256");
