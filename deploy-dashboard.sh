@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# NoshChain Dashboard Deployment Script
-# This script pushes changes to GitHub and deploys to the remote server
+# NoshChain Full Deployment Script
+# This script handles complete deployment including node server and dashboard
 
 set -e
 
@@ -14,7 +14,7 @@ DASHBOARD_PORT=3000
 API_PORT=3001
 LOG_FILE="/tmp/dash.log"
 
-echo "🚀 Deploying NoshChain Dashboard..."
+echo "🚀 Full NoshChain Deployment..."
 
 # Step 1: Commit and push to GitHub from local
 echo "📤 Pushing changes to GitHub..."
@@ -22,24 +22,36 @@ git add -A
 git commit -m "Update dashboard - $(date '+%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
 git push origin main
 
-# Step 2: Pull and deploy on remote server
+# Step 2: Full deployment on remote server
 echo "📥 Deploying to remote server..."
 ssh -i "$SSH_KEY" "$REMOTE_USER@$REMOTE_HOST" "
   set -e
-  echo '📥 Pulling latest changes from GitHub...'
-  cd $REMOTE_DIR && git pull origin main 2>&1 | tail -2
+  cd $REMOTE_DIR
   
-  echo '🛑 Stopping existing dashboard service...'
-  pkill -f 'serve public/dashboard' || true
-  sleep 1
+  echo '📥 Pulling latest changes from GitHub...'
+  git pull origin main 2>&1 | tail -2
+  
+  echo '🛑 Stopping all node processes...'
+  killall node 2>/dev/null || true
+  sleep 3
+  
+  echo '🚀 Starting node server (API on port $API_PORT)...'
+  nohup npm run dev > /tmp/node.log 2>&1 &
+  sleep 5
   
   echo '🚀 Starting dashboard service on port $DASHBOARD_PORT...'
   nohup npx serve public/dashboard -l $DASHBOARD_PORT > $LOG_FILE 2>&1 &
-  sleep 2
+  sleep 3
   
-  echo '✅ Verifying deployment...'
+  echo '✅ Verifying API...'
+  curl -s http://127.0.0.1:$API_PORT/api/status | head -c 100
+  echo ''
+  
+  echo '✅ Verifying dashboard...'
   curl -s http://127.0.0.1:$DASHBOARD_PORT/ | grep -o 'Premium Explorer' | head -1
-  echo '✨ Dashboard deployed successfully!'
+  echo ''
+  
+  echo '✨ Full deployment complete!'
 "
 
 echo "✅ Deployment complete!"
