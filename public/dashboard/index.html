@@ -274,7 +274,7 @@
           <svg viewBox="0 0 24 24"><path d="M12 7v2m0 4l-3 3m3-3v2m0-4l3-3m-3 3v2"/></svg>
         </div>
         <h3>Blocks</h3>
-        <p id="blocks">--</h3>
+        <p id="blocks">--</p>
       </div>
 
       <div class="stat-card">
@@ -282,7 +282,7 @@
           <svg viewBox="0 0 24 24"><path d="M12 15V3m0 4l-3 3m3-3v2m0-4l3-3m-3 3v2"/></svg>
         </div>
         <h3>Peers</h3>
-        <p id="peers">--</h3>
+        <p id="peers">--</p>
       </div>
 
       <div class="stat-card">
@@ -290,7 +290,7 @@
           <svg viewBox="0 0 24 24"><path d="M12 9v2m0 4l3 3m3-3v2m0-4l3-3m-3 3v2"/></svg>
         </div>
         <h3>Mempool</h3>
-        <p id="mempool">--</h3>
+        <p id="mempool">--</p>
       </div>
 
       <div class="stat-card">
@@ -360,7 +360,7 @@
     };
 
     function tryReconnect() {
-      ws.reconnect();
+      location.reload();
     }
 
     async function fetchAPI(path) {
@@ -436,24 +436,48 @@
 
     // Initial fetch
     document.addEventListener('DOMContentLoaded', async () => {
-      await fetchAPI('/status').then(data => {
-        if (data.blocks) elements.blocks.textContent = data.blocks;
-        if (data.peers) elements.peers.textContent = data.peers;
-        if (data.mempoolSize) elements.mempool.textContent = data.mempoolSize;
-        if (data.uptime) elements.uptime.textContent = formatUptime(data.uptime);
-      });
-
-      fetch(`${API_BASE}/blocks/latest`).then(res => res.json()).then(data => {
-        if (data.index) addBlockToList(data);
-      });
-
-      fetch(`${API_BASE}/mempool`).then(res => res.json()).then(data => {
-        if (data.total) elements.mempool.textContent = data.total;
-      });
-
-      fetch(`${API_BASE}/peers`).then(res => res.json()).then(data => {
-        if (data.peers) elements.peers.textContent = data.peers.length;
-      });
+      const status = await fetchAPI('/status');
+      if (status && status.success) {
+        const d = status.data;
+        elements.blocks.textContent = d.blocks ?? '--';
+        elements.peers.textContent = d.peers ?? 0;
+        elements.mempool.textContent = d.mempoolSize ?? 0;
+        if (d.latestBlock) addBlockToList(d.latestBlock);
+      } else if (status && status.data) {
+        elements.blocks.textContent = status.data.blocks ?? '--';
+      }
+      const mempool = await fetchAPI('/mempool');
+      if (mempool && mempool.success) {
+        const m = mempool.data;
+        elements.mempool.textContent = m.total ?? 0;
+        if (m.transactions && m.transactions.length) {
+          document.getElementById('tx-list').innerHTML = '';
+          m.transactions.forEach(tx => addTxToMempool(tx.transaction || tx));
+        } else {
+          document.getElementById('tx-list').innerHTML = '<p style="color: var(--text-secondary); padding: 1rem;">No pending transactions</p>';
+        }
+      }
+      const peers = await fetchAPI('/peers');
+      if (peers && peers.success) {
+        const list = document.getElementById('peer-list');
+        if (peers.data.peers && peers.data.peers.length) {
+          list.innerHTML = peers.data.peers.map(p => `<div class="peer-item"><span>${p}</span></div>`).join('');
+        } else {
+          list.innerHTML = '<p style="color: var(--text-secondary); padding: 1rem;">No peers connected</p>';
+        }
+        elements.peers.textContent = peers.data.count ?? peers.data.peers.length;
+      }
+      const blocksRes = await fetchAPI('/blocks?limit=5&offset=0');
+      if (blocksRes && blocksRes.success) {
+        const list = document.getElementById('block-list');
+        list.innerHTML = '';
+        const blks = blocksRes.data.blocks || [];
+        if (blks.length) blks.forEach(b => addBlockToList({ index: b.height ?? b.index, hash: b.hash }));
+        else {
+          const latest = await fetchAPI('/blocks/latest');
+          if (latest && latest.success) addBlockToList(latest.data);
+        }
+      }
     });
 
     // Reconnect on network change
