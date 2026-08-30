@@ -20,6 +20,10 @@ body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);min-hei
 .nav button:hover::before{left:100%}
 .nav button.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0B0E14;font-weight:600;box-shadow:0 4px 12px rgba(212,175,55,.3);transform:scale(1.02)}
 .live{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);border:1px solid var(--border);padding:6px 12px;border-radius:20px;background:var(--card)}
+.api-status{display:flex;align-items:center;gap:6px;font-size:11px;padding:4px 8px;border-radius:12px;background:var(--card);border:1px solid var(--border)}
+.api-status.connected{border-color:var(--green);color:var(--green)}
+.api-status.disconnected{border-color:var(--red);color:var(--red)}
+.api-status.connecting{border-color:var(--gold);color:var(--gold)}
 .dot{width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 .wrap{max-width:1280px;margin:0 auto;padding:24px}
@@ -115,6 +119,7 @@ body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);min-hei
     <button data-p="network">Network</button>
   </div>
   <div class="live"><span class="dot"></span><span id="liveText">Live</span> <span id="connDot" style="width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;margin-left:4px"></span></div>
+  <div class="api-status" id="apiStatus"><span id="apiDot" style="width:6px;height:6px;background:var(--gold);border-radius:50%;display:inline-block"></span><span id="apiText">Connecting...</span></div>
 </div>
 <div class="wrap">
   <div class="page active" id="p-dashboard">
@@ -156,44 +161,64 @@ function fmtHash(h){return h?`<span class="hash mono" onclick="copyToClipboard('
 function fmtAddr(a){return a?`<span class="hash mono" onclick="copyToClipboard('${a}', this)" title="${a}">${a.slice(0,8)}…${a.slice(-6)}</span>`:'—'}
 function showToast(msg, type='info'){const t=document.createElement('div');t.className='toast';const colors={error:'#F6465D',success:'#0ECB81',info:'#252A3C'};t.style.borderColor=colors[type]||colors.info;t.innerHTML=msg;document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(20px)';setTimeout(()=>t.remove(),300)},3000)}
 function copyToClipboard(text, el){navigator.clipboard.writeText(text).then(()=>{showToast('✓ Copied to clipboard','success');if(el){const original=el.style.color;el.style.color='#0ECB81';setTimeout(()=>el.style.color=original||'',1000)}}).catch(()=>showToast('Failed to copy','error'))}
-async function api(path, options={}){try{const r=await fetch(API+path, {...options, headers:{'Content-Type':'application/json',...options.headers}});if(!r.ok) throw new Error(`HTTP ${r.status}`);return await r.json()}catch(e){console.error(`API error [${path}]:`,e);return{success:false,error:{message:e.message}}}}
+let apiConnected=false;
+async function api(path, options={}){try{const r=await fetch(API+path, {...options, headers:{'Content-Type':'application/json',...options.headers}});if(!r.ok) throw new Error(`HTTP ${r.status}`);apiConnected=true;updateApiStatus();return await r.json()}catch(e){console.error(`API error [${path}]:`,e);apiConnected=false;updateApiStatus();return{success:false,error:{message:e.message}}}}
+function updateApiStatus(){const status=document.getElementById('apiStatus');const dot=document.getElementById('apiDot');const text=document.getElementById('apiText');if(apiConnected){status.className='api-status connected';dot.style.background='var(--green)';text.textContent='API Connected'}else{status.className='api-status disconnected';dot.style.background='var(--red)';text.textContent='API Offline'}}
 async function loadDashboard(){
-  const s=await api('/status');
-  if(s&&s.success){
-    const d=s.data;
-    const blocksEl=document.getElementById('sBlocks');
-    const currentBlocks=parseInt(blocksEl.textContent)||0;
-    if(d.blocks&&d.blocks!==currentBlocks){
-      animateValue(blocksEl, currentBlocks, d.blocks, 500);
-    }else{
-      blocksEl.textContent=d.blocks||'—';
+  try{
+    const s=await api('/status');
+    if(s&&s.success){
+      const d=s.data;
+      const blocksEl=document.getElementById('sBlocks');
+      const currentBlocks=parseInt(blocksEl.textContent)||0;
+      if(d.blocks&&d.blocks!==currentBlocks){
+        animateValue(blocksEl, currentBlocks, d.blocks, 500);
+      }else{
+        blocksEl.textContent=d.blocks||'—';
+      }
+      document.getElementById('sHash').textContent=d.latestBlock?.hash?.slice(0,16)+'…'||'—';
+      document.getElementById('sPeers').textContent=d.peers||'—';
+      document.getElementById('sMempool').textContent=d.mempoolSize||'—';
+      document.getElementById('sDiff').textContent=d.latestBlock?.difficulty||'—';
+      if(d.latestBlock){
+        document.getElementById('dashBlocks').innerHTML=`<div class="row"><span>Height <b>#${d.latestBlock.height}</b></span><span>${fmtHash(d.latestBlock.hash)}</span></div><div class="row"><span>Miner</span><span>${fmtAddr(d.latestBlock.miner)}</span></div><div class="row"><span>Chain Work</span><span class="mono">${d.chainWork||'—'}</span></div>`;
+      }
+      document.getElementById('dashMempool').innerHTML=d.mempoolSize?`<div class="row"><span>Pending</span><span class="badge badge-gold">${d.mempoolSize} txs</span></div>`:`<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">No pending</div>`;
+      document.getElementById('healthGrid').innerHTML=`<div><div style="color:var(--muted);font-size:11px">CONSENSUS</div><div style="font-weight:600">${d.consensus||'—'}</div></div><div><div style="color:var(--muted);font-size:11px">CHAIN ID</div><div class="mono">${d.chainId||'—'}</div></div><div><div style="color:var(--muted);font-size:11px">GENESIS</div><div class="mono" style="font-size:11px">${d.genesisHash?.slice(0,12)||'—'}…</div></div><div><div style="color:var(--muted);font-size:11px">NODE</div><div class="mono" style="font-size:11px">${d.node||'—'}</div></div>`;
     }
-    document.getElementById('sHash').textContent=d.latestBlock?.hash?.slice(0,16)+'…'||'—';
-    document.getElementById('sPeers').textContent=d.peers||'—';
-    document.getElementById('sMempool').textContent=d.mempoolSize||'—';
-    document.getElementById('sDiff').textContent=d.latestBlock?.difficulty||'—';
-    if(d.latestBlock){
-      document.getElementById('dashBlocks').innerHTML=`<div class="row"><span>Height <b>#${d.latestBlock.height}</b></span><span>${fmtHash(d.latestBlock.hash)}</span></div><div class="row"><span>Miner</span><span>${fmtAddr(d.latestBlock.miner)}</span></div><div class="row"><span>Chain Work</span><span class="mono">${d.chainWork||'—'}</span></div>`;
+    const bl=await api('/blocks?limit=5&offset=0');
+    if(bl&&bl.success&&bl.data?.blocks?.length){
+      document.getElementById('dashBlocks').innerHTML=bl.data.blocks.map(b=>`<div class="row"><span><b>#${b.height}</b> <span class="mono" style="font-size:11px;color:var(--muted)">${b.hash.slice(0,12)}…</span></span><span class="badge badge-green">${b.transactionCount||0} txs</span></div>`).join('');
     }
-    document.getElementById('dashMempool').innerHTML=d.mempoolSize?`<div class="row"><span>Pending</span><span class="badge badge-gold">${d.mempoolSize} txs</span></div>`:`<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">No pending</div>`;
-    document.getElementById('healthGrid').innerHTML=`<div><div style="color:var(--muted);font-size:11px">CONSENSUS</div><div style="font-weight:600">${d.consensus||'—'}</div></div><div><div style="color:var(--muted);font-size:11px">CHAIN ID</div><div class="mono">${d.chainId||'—'}</div></div><div><div style="color:var(--muted);font-size:11px">GENESIS</div><div class="mono" style="font-size:11px">${d.genesisHash?.slice(0,12)||'—'}…</div></div><div><div style="color:var(--muted);font-size:11px">NODE</div><div class="mono" style="font-size:11px">${d.node||'—'}</div></div>`;
-  }
-  const bl=await api('/blocks?limit=5&offset=0');
-  if(bl&&bl.success&&bl.data?.blocks?.length){
-    document.getElementById('dashBlocks').innerHTML=bl.data.blocks.map(b=>`<div class="row"><span><b>#${b.height}</b> <span class="mono" style="font-size:11px;color:var(--muted)">${b.hash.slice(0,12)}…</span></span><span class="badge badge-green">${b.transactionCount||0} txs</span></div>`).join('');
+  }catch(e){
+    console.error('Dashboard load error:',e);
+    showToast('Failed to load dashboard data','error');
+    document.getElementById('sBlocks').textContent='0';
+    document.getElementById('sHash').textContent='API Offline';
+    document.getElementById('sPeers').textContent='0';
+    document.getElementById('sMempool').textContent='0';
+    document.getElementById('sDiff').textContent='—';
+    document.getElementById('dashBlocks').innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">API unavailable - check connection</div>';
+    document.getElementById('dashMempool').innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">API unavailable</div>';
+    document.getElementById('healthGrid').innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--red);padding:12px">⚠️ API Server Offline</div>';
   }
 }
 async function loadBlocks(){
-  const el=document.getElementById('blocksList');el.innerHTML='<div style="padding:24px;text-align:center"><span class="spinner"></span></div>';
-  const r=await api('/blocks?limit=20&offset=0');
-  if(r&&r.success){
-    if(!r.data?.blocks?.length){
-      el.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">No blocks yet</div>';
-      return;
+  try{
+    const el=document.getElementById('blocksList');el.innerHTML='<div style="padding:24px;text-align:center"><span class="spinner"></span></div>';
+    const r=await api('/blocks?limit=20&offset=0');
+    if(r&&r.success){
+      if(!r.data?.blocks?.length){
+        el.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">No blocks yet</div>';
+        return;
+      }
+      el.innerHTML=r.data.blocks.map((b,i)=>`<div class="block-card" onclick="showBlockDetails(${b.height}, '${b.hash}')"><div class="block-card-header"><div class="block-number">#${b.height}</div><span class="badge badge-gold">diff ${b.difficulty||'—'}</span></div><div class="block-hash mono">${b.hash||'—'}</div><div class="block-details"><div><div class="block-detail">Timestamp</div><div class="block-detail-value mono">${b.timestamp?new Date(b.timestamp).toLocaleString():'—'}</div></div><div><div class="block-detail">Transactions</div><div class="block-detail-value">${b.transactionCount||0}</div></div><div><div class="block-detail">Miner</div><div class="block-detail-value mono">${b.miner?.slice(0,10)||'—'}…</div></div></div></div>`).join('');
+    }else{
+      el.innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">Failed to load blocks - API may be offline</div>';
     }
-    el.innerHTML=r.data.blocks.map((b,i)=>`<div class="block-card" onclick="showBlockDetails(${b.height}, '${b.hash}')"><div class="block-card-header"><div class="block-number">#${b.height}</div><span class="badge badge-gold">diff ${b.difficulty||'—'}</span></div><div class="block-hash mono">${b.hash||'—'}</div><div class="block-details"><div><div class="block-detail">Timestamp</div><div class="block-detail-value mono">${b.timestamp?new Date(b.timestamp).toLocaleString():'—'}</div></div><div><div class="block-detail">Transactions</div><div class="block-detail-value">${b.transactionCount||0}</div></div><div><div class="block-detail">Miner</div><div class="block-detail-value mono">${b.miner?.slice(0,10)||'—'}…</div></div></div></div>`).join('');
-  }else{
-    el.innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">Failed to load blocks</div>';
+  }catch(e){
+    console.error('Blocks load error:',e);
+    document.getElementById('blocksList').innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">Error loading blocks - Check API connection</div>';
   }
 }
 async function loadTxs(){
@@ -235,12 +260,18 @@ async function loadTokens(){
 }
 async function lookupTokenBal(){const id=document.getElementById('tId').value.trim(),a=document.getElementById('tAddr').value.trim();if(!id||!a)return;const r=await api('/tokens/'+id+'/balance/'+a);document.getElementById('tBalRes').innerHTML=r&&r.success?`<span style="color:var(--green);font-weight:600">${r.data.balance} <span style="color:var(--muted)">${r.data.symbol}</span></span>`:`<span style="color:var(--red)">${r?r.error.message:'Not found'}</span>`}
 async function loadNetwork(){
-  document.getElementById('netMetrics').innerHTML='<div style="padding:24px;text-align:center"><span class="spinner"></span></div>';
-  document.getElementById('netPeers').innerHTML='<div style="padding:24px;text-align:center"><span class="spinner"></span></div>';
-  const n=await api('/network'),m=await api('/metrics'),p=await api('/peers');
-  if(n&&n.success){try{document.getElementById('nReward').textContent=(BigInt(n.data.blockReward||0)/BigInt(1e18)).toString()+' NOSH';document.getElementById('nHalving').textContent=(n.data.blocksUntilNextHalving||0).toLocaleString()}catch(e){document.getElementById('nReward').textContent='—';document.getElementById('nHalving').textContent='—'}}
-  if(m&&m.success){try{const d=m.data;document.getElementById('netMetrics').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><span style="color:var(--muted)">Uptime</span><br><b>${Math.floor((d.uptime||0)/60)}m</b></div><div><span style="color:var(--muted)">Heap</span><br><b>${Math.round((d.memory?.heapUsed||0)/1024/1024)} MB</b></div><div><span style="color:var(--muted)">Blocks</span><br><b>${d.blockchain?.blocks||'—'}</b></div><div><span style="color:var(--muted)">Difficulty</span><br><b>${d.blockchain?.difficulty||'—'}</b></div></div>`}catch(e){document.getElementById('netMetrics').innerHTML='<span style="color:var(--red)">Failed to load metrics</span>'}}
-  if(p&&p.success){document.getElementById('netPeers').innerHTML=p.data?.peers?.length? p.data.peers.map(u=>`<div class="row"><span class="mono" style="font-size:12px">${u}</span><span class="badge badge-green">connected</span></div>`).join(''):'<div style="padding:16px;text-align:center;color:var(--muted)">No peers</div>'}else{document.getElementById('netPeers').innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">Failed to load peers</div>'}
+  try{
+    document.getElementById('netMetrics').innerHTML='<div style="padding:24px;text-align:center"><span class="spinner"></span></div>';
+    document.getElementById('netPeers').innerHTML='<div style="padding:24px;text-align:center"><span class="spinner"></span></div>';
+    const n=await api('/network'),m=await api('/metrics'),p=await api('/peers');
+    if(n&&n.success){try{document.getElementById('nReward').textContent=(BigInt(n.data.blockReward||0)/BigInt(1e18)).toString()+' NOSH';document.getElementById('nHalving').textContent=(n.data.blocksUntilNextHalving||0).toLocaleString()}catch(e){document.getElementById('nReward').textContent='—';document.getElementById('nHalving').textContent='—'}}
+    if(m&&m.success){try{const d=m.data;document.getElementById('netMetrics').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><span style="color:var(--muted)">Uptime</span><br><b>${Math.floor((d.uptime||0)/60)}m</b></div><div><span style="color:var(--muted)">Heap</span><br><b>${Math.round((d.memory?.heapUsed||0)/1024/1024)} MB</b></div><div><span style="color:var(--muted)">Blocks</span><br><b>${d.blockchain?.blocks||'—'}</b></div><div><span style="color:var(--muted)">Difficulty</span><br><b>${d.blockchain?.difficulty||'—'}</b></div></div>`}catch(e){document.getElementById('netMetrics').innerHTML='<span style="color:var(--red)">Failed to load metrics</span>'}}
+    if(p&&p.success){document.getElementById('netPeers').innerHTML=p.data?.peers?.length? p.data.peers.map(u=>`<div class="row"><span class="mono" style="font-size:12px">${u}</span><span class="badge badge-green">connected</span></div>`).join(''):'<div style="padding:16px;text-align:center;color:var(--muted)">No peers</div>'}else{document.getElementById('netPeers').innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">Failed to load peers</div>'}
+  }catch(e){
+    console.error('Network load error:',e);
+    document.getElementById('netMetrics').innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">API Offline</div>';
+    document.getElementById('netPeers').innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">API Offline</div>';
+  }
 }
 let chartB, chartM;
 function initCharts(){
@@ -308,7 +339,13 @@ loadDashboard = async function(){
     if(s&&s.success) updateCharts(s.data.blocks||0, s.data.mempoolSize||0);
   }catch(e){console.error('Chart data fetch error:',e)}
 };
-document.addEventListener('DOMContentLoaded', ()=>{setTimeout(initCharts,500);loadDashboard();loadNetwork()});
+document.addEventListener('DOMContentLoaded', ()=>{
+  console.log('Dashboard initializing...');
+  updateApiStatus();
+  setTimeout(initCharts,500);
+  loadDashboard().catch(e=>console.error('Initial dashboard load failed:',e));
+  loadNetwork().catch(e=>console.error('Initial network load failed:',e));
+});
 setInterval(loadDashboard,5000);
 setInterval(loadNetwork,30000);
 </script>
