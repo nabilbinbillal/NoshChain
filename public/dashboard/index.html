@@ -12,46 +12,80 @@ body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);min-hei
 .mono{font-family:'JetBrains Mono',monospace}
 .topbar{position:sticky;top:0;z-index:50;background:rgba(11,14,20,.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between}
 .logo{display:flex;align-items:center;gap:12px;font-weight:800;font-size:18px;letter-spacing:-.5px}
-.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 16px rgba(212,175,55,.3)}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 16px rgba(212,175,55,.3);transition:all 0.3s ease;cursor:pointer}
+.logo-icon:hover{transform:scale(1.1) rotate(5deg);box-shadow:0 8px 24px rgba(212,175,55,.5)}
 .nav{display:flex;gap:4px;background:var(--card);padding:4px;border-radius:10px;border:1px solid var(--border)}
-.nav button{background:transparent;border:0;color:var(--muted);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:.2s}
-.nav button.active{background:var(--gold);color:#0B0E14;font-weight:600}
+.nav button{background:transparent;border:0;color:var(--muted);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:.2s;position:relative;overflow:hidden}
+.nav button::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(212,175,55,.1),transparent);transition:left 0.5s ease}
+.nav button:hover::before{left:100%}
+.nav button.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0B0E14;font-weight:600;box-shadow:0 4px 12px rgba(212,175,55,.3)}
 .live{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);border:1px solid var(--border);padding:6px 12px;border-radius:20px;background:var(--card)}
 .dot{width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 .wrap{max-width:1280px;margin:0 auto;padding:24px}
-.hero{background:linear-gradient(135deg,#151821 0%,#1C2030 50%,#1A1F33 100%);border:1px solid var(--border);border-radius:16px;padding:28px;position:relative;overflow:hidden;margin-bottom:24px}
-.hero::before{content:'';position:absolute;top:-50%;right:-30%;width:600px;height:600px;background:radial-gradient(circle,rgba(212,175,55,.08),transparent 70%);pointer-events:none}
+.hero{background:linear-gradient(135deg,#151821 0%,#1C2030 50%,#1A1F33 100%);border:1px solid var(--border);border-radius:16px;padding:28px;position:relative;overflow:hidden;margin-bottom:24px;transition:all 0.5s ease}
+.hero::before{content:'';position:absolute;top:-50%;right:-30%;width:600px;height:600px;background:radial-gradient(circle,rgba(212,175,55,.08),transparent 70%);pointer-events:none;animation:float 8s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,-20px)}}
 .hero h1{font-size:28px;font-weight:800;letter-spacing:-1px;margin-bottom:6px}
-.hero h1 span{background:linear-gradient(135deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero h1 span{background:linear-gradient(135deg,var(--gold),var(--gold2));background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .hero p{color:var(--muted);font-size:14px}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
-.stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;position:relative;overflow:hidden}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;position:relative;overflow:hidden;transition:all 0.3s ease}
 .stat::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.3}
+.stat:hover{transform:translateY(-2px);transition:0.3s;box-shadow:0 8px 24px rgba(212,175,55,.15)}
 .stat label{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);font-weight:600}
 .stat strong{font-size:26px;font-weight:800;display:block;margin:6px 0 2px}
 .stat small{font-size:12px;color:var(--muted)}
 .stat.gold strong{color:var(--gold)}
 .grid2{display:grid;grid-template-columns:1.4fr .8fr;gap:16px;margin-bottom:24px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-..card-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border);font-weight:600;font-size:13px}
-..card-head span{color:var(--muted);font-weight:400;font-size:12px;cursor:pointer}
-..card-body{display:block;padding:0}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all 0.3s ease}
+.card:hover{border-color:rgba(212,175,55,.3);box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border);font-weight:600;font-size:13px}
+.card-head span{color:var(--muted);font-weight:400;font-size:12px;cursor:pointer}
+.card-body{display:block;padding:0}
 .row{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid rgba(37,42,60,.5);font-size:13px;transition:.15s}
 .row:last-child{border:0}
 .row:hover{background:rgba(212,175,55,.04)}
 .badge{font-size:11px;padding:3px 8px;border-radius:20px;font-weight:600}
 .badge-green{background:rgba(14,203,129,.12);color:var(--green);border:1px solid rgba(14,203,129,.2)}
 .badge-gold{background:rgba(212,175,55,.12);color:var(--gold);border:1px solid rgba(212,175,55,.2)}
+.spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-size:13px;font-weight:500;z-index:100;animation:slideIn 0.3s ease;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+@keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.block-card{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;transition:all 0.3s ease;cursor:pointer}
+.block-card:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:0 8px 24px rgba(212,175,55,.1)}
+.block-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.block-number{font-size:18px;font-weight:800;color:var(--gold)}
+.block-hash{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);word-break:break-all}
+.block-details{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;font-size:12px}
+.block-detail{color:var(--muted)}
+.block-detail-value{font-weight:600;color:var(--text)}
+.balance-display{background:linear-gradient(135deg,rgba(212,175,55,.1),rgba(212,175,55,.05));border:1px solid rgba(212,175,55,.3);border-radius:16px;padding:24px;text-align:center;position:relative;overflow:hidden}
+.balance-display::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(212,175,55,.08),transparent 70%);pointer-events:none}
+.balance-amount{font-size:48px;font-weight:800;color:var(--gold);line-height:1;margin-bottom:8px}
+.balance-label{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.balance-wei{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);margin-top:8px}
+.shimmer{position:relative;overflow:hidden}
+.shimmer::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.05),transparent);animation:shimmer 2s infinite}
+@keyframes shimmer{100%{left:100%}}
+.pulse-ring{position:relative}
+.pulse-ring::before{content:'';position:absolute;top:50%;left:50%;width:100%;height:100%;border:2px solid var(--gold);border-radius:50%;transform:translate(-50%,-50%);animation:pulse-ring 2s infinite}
+@keyframes pulse-ring{0%{transform:translate(-50%,-50%) scale(0.8);opacity:1}100%{transform:translate(-50%,-50%) scale(1.5);opacity:0}}
 .input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:8px;font-size:13px;outline:none}
-.input:focus{border-color:var(--gold)}
-.btn{background:var(--gold);color:#0B0E14;border:0;padding:10px 16px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer}
+.input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,.1)}
+.btn{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0B0E14;border:0;padding:10px 16px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;justify-content:center;gap:8px;position:relative;overflow:hidden}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(212,175,55,.3)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
 .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--card2)}
 .hash{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);cursor:pointer}
 .page{display:none}.page.active{display:block}
 .wallet-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.wallet-grid{grid-template-columns:1fr}}
-@media(max-width:640px){.topbar{height:auto;padding:12px 16px;flex-wrap:wrap;gap:12px}.nav{width:100%;overflow-x:auto;scrollbar-width:none}.nav::-webkit-scrollbar{display:none}.stats{grid-template-columns:1fr 1fr;gap:12px}.stat{padding:14px}.stat strong{font-size:20px}.hero{padding:20px}.hero h1{font-size:22px}.wrap{padding:16px}}
+@media(max-width:1024px){.stats{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}
+@media(max-width:768px){.topbar{padding:0 16px}.logo{font-size:16px}.nav{gap:2px}.nav button{padding:6px 10px;font-size:12px}.stats{gap:12px}.stat{padding:14px}.stat strong{font-size:22px}.hero{padding:20px}.hero h1{font-size:24px}.grid2{grid-template-columns:1fr}.wallet-grid{grid-template-columns:1fr}}
+@media(max-width:480px){.topbar{height:auto;padding:12px 16px;flex-wrap:wrap;gap:12px}.nav{width:100%;overflow-x:auto;scrollbar-width:none}.nav::-webkit-scrollbar{display:none}.stats{grid-template-columns:1fr 1fr;gap:12px}.stat{padding:12px}.stat strong{font-size:20px}.hero{padding:16px}.hero h1{font-size:20px}.wrap{padding:12px}.card-head{padding:12px 14px}.row{padding:10px 14px;font-size:12px}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
@@ -70,13 +104,12 @@ body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);min-hei
 </div>
 <div class="wrap">
   <div class="page active" id="p-dashboard">
-    <div class="hero"><h1>NoshChain <span>Explorer</span></h1><p>Proof-of-work • NOSH • Chain ID 13371337 • Real-time</p></div>
+    <div class="hero"><h1>NoshChain <span>Explorer</span></h1><p>Proof-of-work • NOSH • Chain ID 13371337 • Real-time <span class="pulse-ring" style="display:inline-block;width:8px;height:8px;background:var(--gold);border-radius:50%;margin-left:8px"></span></p></div>
     <div class="stats">
       <div class="stat gold"><label>Block Height</label><strong id="sBlocks">—</strong><small id="sHash" class="mono">loading</small></div>
       <div class="stat"><label>Peers</label><strong id="sPeers">—</strong><small>connected</small></div>
       <div class="stat"><label>Mempool</label><strong id="sMempool">—</strong><small>pending</small></div>
       <div class="stat"><label>Difficulty</label><strong id="sDiff">—</strong><small>leading zeros</small></div>
-    </div>
     <div class="card" style="margin-bottom:24px">
       <div class="card-head">📈 Real-time Analytics <span style="font-size:11px;color:var(--green)">● Live</span></div>
       <div class="card-body" style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
@@ -90,48 +123,67 @@ body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);min-hei
     </div>
     <div class="card"><div class="card-head">Network Health <span id="healthBadge"><span class="badge badge-green">Healthy</span></span></div><div class="card-body" style="padding:16px 18px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;font-size:12px" id="healthGrid"></div></div>
   </div>
-  <div class="page" id="p-blocks"><div class="hero" style="padding:20px 28px"><h1 style="font-size:22px">Block Explorer</h1><p>Browse blocks and rewards</p></div><div class="card"><div class="card-head">All Blocks <span><button class="btn btn-ghost" style="padding:6px 10px;font-size:12px" onclick="loadBlocks()">↻ Refresh</button></span></div><div class="card-body" id="blocksList"></div></div></div>
+  <div class="page" id="p-blocks"><div class="hero" style="padding:20px 28px"><h1 style="font-size:22px">Block Explorer</h1><p>Browse blocks and rewards</p></div><div class="card"><div class="card-head">All Blocks <span><button class="btn btn-ghost" style="padding:6px 10px;font-size:12px" onclick="loadBlocks()">↻ Refresh</button></span></div><div class="card-body" id="blocksList" style="padding:16px"></div></div></div>
   <div class="page" id="p-txs"><div class="hero" style="padding:20px 28px"><h1 style="font-size:22px">Transactions</h1><p>Pending and confirmed</p></div><div class="grid2"><div class="card"><div class="card-head">Pending (Mempool)</div><div class="card-body" id="txPending"></div></div><div class="card"><div class="card-head">Lookup by Hash</div><div class="card-body" style="padding:16px"><input id="txHash" class="input mono" placeholder="64-char hash"><button class="btn" style="margin-top:10px;width:100%" onclick="lookupTx()">Lookup</button><div id="txResult" style="margin-top:12px;font-size:12px"></div></div></div></div></div>
-  <div class="page" id="p-wallets"><div class="hero" style="padding:20px 28px"><h1 style="font-size:22px">Wallets</h1><p>Create, check, send NOSH</p></div><div class="wallet-grid"><div class="card"><div class="card-head">◆ Create Wallet</div><div class="card-body" style="padding:16px"><input id="wName" class="input" placeholder="Wallet name e.g. alice"><button class="btn" style="margin-top:10px;width:100%" onclick="createWallet()">Generate</button><div id="wCreateRes" style="margin-top:12px;font-size:12px;word-break:break-all"></div></div></div><div class="card"><div class="card-head">◎ Check Balance</div><div class="card-body" style="padding:16px"><input id="bAddr" class="input mono" placeholder="40-char address"><button class="btn" style="margin-top:10px;width:100%" onclick="checkBalance()">Check Balance</button><div id="bRes" style="margin-top:12px;font-size:13px"></div></div></div></div><div class="card" style="margin-top:16px"><div class="card-head">↗ Send NOSH</div><div class="card-body" style="padding:16px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><input id="sFrom" class="input mono" placeholder="From"><input id="sTo" class="input mono" placeholder="To"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px"><input id="sAmt" class="input" placeholder="Amount wei"><input id="sFee" class="input" placeholder="Fee"></div><button class="btn" style="margin-top:12px;width:100%" onclick="alert('Use CLI: npm run send <wallet> <to> <amount>')">Send</button><p style="font-size:11px;color:var(--muted);margin-top:8px">Use CLI: <span class="mono">npm run send alice &lt;to&gt; &lt;amount&gt;</span></p></div></div></div>
+  <div class="page" id="p-wallets"><div class="hero" style="padding:20px 28px"><h1 style="font-size:22px">Wallets</h1><p>Create, check, send NOSH</p></div><div class="wallet-grid"><div class="card"><div class="card-head">◆ Create Wallet</div><div class="card-body" style="padding:16px"><input id="wName" class="input" placeholder="Wallet name e.g. alice"><button class="btn" style="margin-top:10px;width:100%" onclick="createWallet()">Generate</button><div id="wCreateRes" style="margin-top:12px;font-size:12px;word-break:break-all"></div></div></div><div class="card"><div class="card-head">◎ Check Balance</div><div class="card-body" style="padding:16px"><input id="bAddr" class="input mono" placeholder="40-char address"><button class="btn" style="margin-top:10px;width:100%" onclick="checkBalance()">Check Balance</button><div id="bRes" style="margin-top:12px"></div></div></div></div><div class="card" style="margin-top:16px"><div class="card-head">↗ Send NOSH</div><div class="card-body" style="padding:16px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><input id="sFrom" class="input mono" placeholder="From"><input id="sTo" class="input mono" placeholder="To"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px"><input id="sAmt" class="input" placeholder="Amount wei"><input id="sFee" class="input" placeholder="Fee"></div><button class="btn" style="margin-top:12px;width:100%" onclick="alert('Use CLI: npm run send <wallet> <to> <amount>')">Send</button><p style="font-size:11px;color:var(--muted);margin-top:8px">Use CLI: <span class="mono">npm run send alice &lt;to&gt; &lt;amount&gt;</span></p></div></div></div>
   <div class="page" id="p-tokens"><div class="hero" style="padding:20px 28px"><h1 style="font-size:22px">Tokens</h1><p>Custom tokens on NoshChain</p></div><div class="card"><div class="card-head">All Tokens <span class="badge badge-gold" id="tokenCount">0 tokens</span></div><div class="card-body" id="tokenList"><div style="padding:24px;text-align:center;color:var(--muted)">Loading...</div></div></div><div class="card" style="margin-top:16px"><div class="card-head">Token Balance</div><div class="card-body" style="padding:16px;display:flex;gap:8px"><input id="tId" class="input mono" placeholder="Token ID"><input id="tAddr" class="input mono" placeholder="Address"><button class="btn" onclick="lookupTokenBal()">Check</button></div><div id="tBalRes" style="padding:0 16px 16px;font-size:12px"></div></div></div>
   <div class="page" id="p-network"><div class="hero" style="padding:20px 28px"><h1 style="font-size:22px">Network</h1><p>Supply and metrics</p></div><div class="stats"><div class="stat"><label>Genesis Supply</label><strong style="font-size:16px">21M</strong><small>NOSH</small></div><div class="stat"><label>Max Supply</label><strong style="font-size:16px">231M</strong><small>NOSH</small></div><div class="stat"><label>Block Reward</label><strong id="nReward">—</strong><small>current era</small></div><div class="stat"><label>Halving In</label><strong id="nHalving">—</strong><small>blocks</small></div></div><div class="grid2"><div class="card"><div class="card-head">Node Metrics</div><div class="card-body" id="netMetrics" style="padding:16px;font-size:13px;line-height:1.8"></div></div><div class="card"><div class="card-head">Peers</div><div class="card-body" id="netPeers"></div></div></div></div>
 </div>
 <script>
 const API=`http://${window.location.hostname}:3001/api`;
 const WS_URL=`ws://${window.location.hostname}:3001/ws`;
-let ws;function connectWS(){try{ws=new WebSocket(WS_URL);ws.onopen=()=>{document.getElementById('connDot').style.background='var(--green)';document.getElementById('liveText').textContent='Live'};ws.onmessage=e=>{try{const d=JSON.parse(e.data);if(d.type==='block')loadDashboard();if(d.type==='transaction')loadDashboard()}catch{}};ws.onclose=()=>{document.getElementById('connDot').style.background='var(--red)';document.getElementById('liveText').textContent='Reconnecting';setTimeout(connectWS,3000)};ws.onerror=()=>{document.getElementById('connDot').style.background='var(--red)'}}catch{}}
+let ws;let reconnectAttempts=0;const MAX_RECONNECT_ATTEMPTS=10;function connectWS(){try{ws=new WebSocket(WS_URL);ws.onopen=()=>{reconnectAttempts=0;document.getElementById('connDot').style.background='var(--green)';document.getElementById('liveText').textContent='Live'};ws.onmessage=e=>{try{const d=JSON.parse(e.data);if(d.type==='block')loadDashboard();if(d.type==='transaction')loadDashboard()}catch{}};ws.onclose=()=>{document.getElementById('connDot').style.background='var(--red)';document.getElementById('liveText').textContent='Reconnecting';if(reconnectAttempts<MAX_RECONNECT_ATTEMPTS){reconnectAttempts++;const delay=Math.min(3000*Math.pow(1.5,reconnectAttempts-1),30000);setTimeout(connectWS,delay)}else{document.getElementById('liveText').textContent='Offline'}};ws.onerror=()=>{document.getElementById('connDot').style.background='var(--red)'}}catch(e){console.error('WebSocket connection failed:',e)}}
 connectWS();
 function showPage(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById('p-'+p).classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.p===p));if(p==='blocks')loadBlocks();if(p==='txs')loadTxs();if(p==='tokens')loadTokens();if(p==='network')loadNetwork()}
 document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.p)));
-function fmtHash(h){return h?`<span class="hash mono" onclick="navigator.clipboard.writeText('${h}')" title="${h}">${h.slice(0,10)}…${h.slice(-6)}</span>`:'—'}
-function fmtAddr(a){return a?`<span class="hash mono" title="${a}">${a.slice(0,8)}…${a.slice(-6)}</span>`:'—'}
-async function api(path){try{const r=await fetch(API+path);return await r.json()}catch(e){return null}}
+function fmtHash(h){return h?`<span class="hash mono" onclick="copyToClipboard('${h}', this)" title="${h}">${h.slice(0,10)}…${h.slice(-6)}</span>`:'—'}
+function fmtAddr(a){return a?`<span class="hash mono" onclick="copyToClipboard('${a}', this)" title="${a}">${a.slice(0,8)}…${a.slice(-6)}</span>`:'—'}
+function showToast(msg, type='info'){const t=document.createElement('div');t.className='toast';const colors={error:'#F6465D',success:'#0ECB81',info:'#252A3C'};t.style.borderColor=colors[type]||colors.info;t.innerHTML=msg;document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(20px)';setTimeout(()=>t.remove(),300)},3000)}
+function copyToClipboard(text, el){navigator.clipboard.writeText(text).then(()=>{showToast('✓ Copied to clipboard','success');if(el){const original=el.style.color;el.style.color='#0ECB81';setTimeout(()=>el.style.color=original||'',1000)}}).catch(()=>showToast('Failed to copy','error'))}
+async function api(path, options={}){try{const r=await fetch(API+path, {...options, headers:{'Content-Type':'application/json',...options.headers}});if(!r.ok) throw new Error(`HTTP ${r.status}`);return await r.json()}catch(e){console.error(`API error [${path}]:`,e);return{success:false,error:{message:e.message}}}}
 async function loadDashboard(){
   const s=await api('/status');
   if(s&&s.success){
     const d=s.data;
-    document.getElementById('sBlocks').textContent=d.blocks;
-    document.getElementById('sHash').textContent=d.latestBlock?d.latestBlock.hash.slice(0,16)+'…':'—';
-    document.getElementById('sPeers').textContent=d.peers;
-    document.getElementById('sMempool').textContent=d.mempoolSize;
-    document.getElementById('sDiff').textContent=d.latestBlock?d.latestBlock.difficulty:'—';
-    document.getElementById('dashBlocks').innerHTML=`<div class="row"><span>Height <b>#${d.latestBlock.height}</b></span><span>${fmtHash(d.latestBlock.hash)}</span></div><div class="row"><span>Miner</span><span>${fmtAddr(d.latestBlock.miner)}</span></div><div class="row"><span>Chain Work</span><span class="mono">${d.chainWork}</span></div>`;
+    const blocksEl=document.getElementById('sBlocks');
+    const currentBlocks=parseInt(blocksEl.textContent)||0;
+    if(d.blocks&&d.blocks!==currentBlocks){
+      animateValue(blocksEl, currentBlocks, d.blocks, 500);
+    }else{
+      blocksEl.textContent=d.blocks||'—';
+    }
+    document.getElementById('sHash').textContent=d.latestBlock?.hash?.slice(0,16)+'…'||'—';
+    document.getElementById('sPeers').textContent=d.peers||'—';
+    document.getElementById('sMempool').textContent=d.mempoolSize||'—';
+    document.getElementById('sDiff').textContent=d.latestBlock?.difficulty||'—';
+    if(d.latestBlock){
+      document.getElementById('dashBlocks').innerHTML=`<div class="row"><span>Height <b>#${d.latestBlock.height}</b></span><span>${fmtHash(d.latestBlock.hash)}</span></div><div class="row"><span>Miner</span><span>${fmtAddr(d.latestBlock.miner)}</span></div><div class="row"><span>Chain Work</span><span class="mono">${d.chainWork||'—'}</span></div>`;
+    }
     document.getElementById('dashMempool').innerHTML=d.mempoolSize?`<div class="row"><span>Pending</span><span class="badge badge-gold">${d.mempoolSize} txs</span></div>`:`<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">No pending</div>`;
-    document.getElementById('healthGrid').innerHTML=`<div><div style="color:var(--muted);font-size:11px">CONSENSUS</div><div style="font-weight:600">${d.consensus}</div></div><div><div style="color:var(--muted);font-size:11px">CHAIN ID</div><div class="mono">${d.chainId}</div></div><div><div style="color:var(--muted);font-size:11px">GENESIS</div><div class="mono" style="font-size:11px">${d.genesisHash.slice(0,12)}…</div></div><div><div style="color:var(--muted);font-size:11px">NODE</div><div class="mono" style="font-size:11px">${d.node}</div></div>`;
+    document.getElementById('healthGrid').innerHTML=`<div><div style="color:var(--muted);font-size:11px">CONSENSUS</div><div style="font-weight:600">${d.consensus||'—'}</div></div><div><div style="color:var(--muted);font-size:11px">CHAIN ID</div><div class="mono">${d.chainId||'—'}</div></div><div><div style="color:var(--muted);font-size:11px">GENESIS</div><div class="mono" style="font-size:11px">${d.genesisHash?.slice(0,12)||'—'}…</div></div><div><div style="color:var(--muted);font-size:11px">NODE</div><div class="mono" style="font-size:11px">${d.node||'—'}</div></div>`;
   }
   const bl=await api('/blocks?limit=5&offset=0');
-  if(bl&&bl.success&&bl.data.blocks.length){
-    document.getElementById('dashBlocks').innerHTML=bl.data.blocks.map(b=>`<div class="row"><span><b>#${b.height}</b> <span class="mono" style="font-size:11px;color:var(--muted)">${b.hash.slice(0,12)}…</span></span><span class="badge badge-green">${b.transactionCount} txs</span></div>`).join('');
+  if(bl&&bl.success&&bl.data?.blocks?.length){
+    document.getElementById('dashBlocks').innerHTML=bl.data.blocks.map(b=>`<div class="row"><span><b>#${b.height}</b> <span class="mono" style="font-size:11px;color:var(--muted)">${b.hash.slice(0,12)}…</span></span><span class="badge badge-green">${b.transactionCount||0} txs</span></div>`).join('');
   }
 }
 async function loadBlocks(){
-  const el=document.getElementById('blocksList');el.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">Loading...</div>';
+  const el=document.getElementById('blocksList');el.innerHTML='<div style="padding:24px;text-align:center"><span class="spinner"></span></div>';
   const r=await api('/blocks?limit=20&offset=0');
-  if(r&&r.success){el.innerHTML=r.data.blocks.map(b=>`<div class="row"><div><div style="font-weight:600">#${b.height} <span class="badge badge-gold" style="margin-left:6px">diff ${b.difficulty}</span></div><div class="hash mono" style="font-size:11px">${b.hash}</div><div style="font-size:11px;color:var(--muted)">prev ${b.previousHash.slice(0,16)}… • ${b.transactionCount} txs</div></div><div style="text-align:right"><div class="mono" style="font-size:11px">${new Date(b.timestamp).toLocaleString()}</div><div class="mono" style="font-size:11px;color:var(--muted)">${b.miner.slice(0,10)}…</div></div></div>`).join('')||'<div style="padding:16px;text-align:center;color:var(--muted)">No blocks</div>'}
+  if(r&&r.success){
+    if(!r.data?.blocks?.length){
+      el.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">No blocks yet</div>';
+      return;
+    }
+    el.innerHTML=r.data.blocks.map((b,i)=>`<div class="block-card" onclick="showToast('Block #${b.height} copied','success')"><div class="block-card-header"><div class="block-number">#${b.height}</div><span class="badge badge-gold">diff ${b.difficulty||'—'}</span></div><div class="block-hash mono">${b.hash||'—'}</div><div class="block-details"><div><div class="block-detail">Timestamp</div><div class="block-detail-value mono">${b.timestamp?new Date(b.timestamp).toLocaleString():'—'}</div></div><div><div class="block-detail">Transactions</div><div class="block-detail-value">${b.transactionCount||0}</div></div><div><div class="block-detail">Miner</div><div class="block-detail-value mono">${b.miner?.slice(0,10)||'—'}…</div></div></div></div>`).join('');
+  }else{
+    el.innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">Failed to load blocks</div>';
+  }
 }
 async function loadTxs(){
-  const r=await api('/mempool');const el=document.getElementById('txPending');
-  if(r&&r.success){if(!r.data.transactions.length)el.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">No pending transactions</div>';else el.innerHTML=r.data.transactions.map(x=>{const t=x.transaction||x;return `<div class="row"><div><div class="hash mono">${(x.hash||'').slice(0,16)}…</div><div style="font-size:11px;color:var(--muted)">${fmtAddr(t.from)} → ${fmtAddr(t.to)}</div></div><div style="text-align:right"><div style="font-weight:600">${(BigInt(t.amount)/BigInt(1e18)).toString()} NOSH</div><div style="font-size:11px;color:var(--muted)">fee ${(BigInt(t.fee)/BigInt(1e15)).toString()} finney</div></div></div>`}).join('')}
+  const el=document.getElementById('txPending');el.innerHTML='<div style="padding:24px;text-align:center"><span class="spinner"></span></div>';
+  const r=await api('/mempool');
+  if(r&&r.success){if(!r.data?.transactions?.length)el.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">No pending transactions</div>';else el.innerHTML=r.data.transactions.map(x=>{const t=x.transaction||x;try{return `<div class="row"><div><div class="hash mono">${(x.hash||'').slice(0,16)}…</div><div style="font-size:11px;color:var(--muted)">${fmtAddr(t.from)} → ${fmtAddr(t.to)}</div></div><div style="text-align:right"><div style="font-weight:600">${t.amount?(BigInt(t.amount)/BigInt(1e18)).toString():'0'} NOSH</div><div style="font-size:11px;color:var(--muted)">fee ${t.fee?(BigInt(t.fee)/BigInt(1e15)).toString():'0'} finney</div></div></div>`}catch(e){return `<div class="row"><span style="color:var(--red)">Invalid transaction data</span></div>`}}).join('')}else{el.innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">Failed to load mempool</div>'}
 }
 async function lookupTx(){
   const h=document.getElementById('txHash').value.trim();if(!h)return;
@@ -139,47 +191,69 @@ async function lookupTx(){
 }
 async function checkBalance(){
   const a=document.getElementById('bAddr').value.trim();if(!a)return;
-  const r=await api('/address/'+a+'/balance');document.getElementById('bRes').innerHTML=r&&r.success?`<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px"><div style="font-size:20px;font-weight:800">${(BigInt(r.data.balance)/BigInt(1e18)).toString()} <span style="font-size:12px;color:var(--gold)">NOSH</span></div><div class="mono" style="font-size:11px;color:var(--muted)">${r.data.balance} wei</div></div>`:`<span style="color:var(--red)">${r?r.error.message:'Invalid address'}</span>`
+  const el=document.getElementById('bRes');el.innerHTML='<div style="padding:24px;text-align:center"><span class="spinner"></span></div>';
+  const r=await api('/address/'+a+'/balance');
+  if(r&&r.success){
+    const balanceNosh=(BigInt(r.data.balance)/BigInt(1e18)).toString();
+    el.innerHTML=`<div class="balance-display shimmer"><div class="balance-amount">${balanceNosh}</div><div class="balance-label">NOSH Balance</div><div class="balance-wei mono">${r.data.balance} wei</div></div>`;
+  }else{
+    el.innerHTML=`<div style="padding:16px;text-align:center;color:var(--red)">${r?r.error.message:'Invalid address'}</div>`;
+  }
 }
 async function createWallet(){const n=document.getElementById('wName').value.trim();if(!n)return alert('Enter wallet name');document.getElementById('wCreateRes').innerHTML='<span style="color:var(--muted)">Use CLI: <span class="mono">npm run wallet '+n+'</span> — secp256k1 wallets generated server-side</span>'}
 async function loadTokens(){
-  const r=await api('/tokens');const el=document.getElementById('tokenList');
-  if(r&&r.success){document.getElementById('tokenCount').textContent=r.data.count+' tokens';if(!r.data.tokens.length)el.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">No tokens yet<br><span style="font-size:11px">Use <span class="mono">npx tsx src/create-token.ts &lt;wallet&gt; &lt;name&gt; &lt;symbol&gt; &lt;decimals&gt; &lt;supply&gt;</span></span></div>';else el.innerHTML=r.data.tokens.map(t=>`<div class="row"><div><div style="font-weight:600">${t.name} <span class="badge badge-gold">${t.symbol}</span></div><div class="mono" style="font-size:11px;color:var(--muted)">${t.id.slice(0,16)}… • supply ${t.totalSupply}</div></div><div class="mono" style="font-size:11px">${t.creator.slice(0,8)}…</div></div>`).join('')}
+  const el=document.getElementById('tokenList');el.innerHTML='<div style="padding:24px;text-align:center"><span class="spinner"></span></div>';
+  const r=await api('/tokens');
+  if(r&&r.success){document.getElementById('tokenCount').textContent=(r.data?.count||0)+' tokens';if(!r.data?.tokens?.length)el.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">No tokens yet<br><span style="font-size:11px">Use <span class="mono">npx tsx src/create-token.ts &lt;wallet&gt; &lt;name&gt; &lt;symbol&gt; &lt;decimals&gt; &lt;supply&gt;</span></span></div>';else el.innerHTML=r.data.tokens.map(t=>`<div class="row"><div><div style="font-weight:600">${t.name||'—'} <span class="badge badge-gold">${t.symbol||'—'}</span></div><div class="mono" style="font-size:11px;color:var(--muted)">${t.id?.slice(0,16)||'—'}… • supply ${t.totalSupply||'—'}</div></div><div class="mono" style="font-size:11px">${t.creator?.slice(0,8)||'—'}…</div></div>`).join('')}else{el.innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">Failed to load tokens</div>'}
 }
 async function lookupTokenBal(){const id=document.getElementById('tId').value.trim(),a=document.getElementById('tAddr').value.trim();if(!id||!a)return;const r=await api('/tokens/'+id+'/balance/'+a);document.getElementById('tBalRes').innerHTML=r&&r.success?`<span style="color:var(--green);font-weight:600">${r.data.balance} <span style="color:var(--muted)">${r.data.symbol}</span></span>`:`<span style="color:var(--red)">${r?r.error.message:'Not found'}</span>`}
 async function loadNetwork(){
+  document.getElementById('netMetrics').innerHTML='<div style="padding:24px;text-align:center"><span class="spinner"></span></div>';
+  document.getElementById('netPeers').innerHTML='<div style="padding:24px;text-align:center"><span class="spinner"></span></div>';
   const n=await api('/network'),m=await api('/metrics'),p=await api('/peers');
-  if(n&&n.success){document.getElementById('nReward').textContent=(BigInt(n.data.blockReward)/BigInt(1e18)).toString()+' NOSH';document.getElementById('nHalving').textContent=n.data.blocksUntilNextHalving.toLocaleString()}
-  if(m&&m.success){const d=m.data;document.getElementById('netMetrics').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><span style="color:var(--muted)">Uptime</span><br><b>${Math.floor(d.uptime/60)}m</b></div><div><span style="color:var(--muted)">Heap</span><br><b>${Math.round(d.memory.heapUsed/1024/1024)} MB</b></div><div><span style="color:var(--muted)">Blocks</span><br><b>${d.blockchain.blocks}</b></div><div><span style="color:var(--muted)">Difficulty</span><br><b>${d.blockchain.difficulty}</b></div></div>`}
-  if(p&&p.success){document.getElementById('netPeers').innerHTML=p.data.peers.length? p.data.peers.map(u=>`<div class="row"><span class="mono" style="font-size:12px">${u}</span><span class="badge badge-green">connected</span></div>`).join(''):'<div style="padding:16px;text-align:center;color:var(--muted)">No peers</div>'}
+  if(n&&n.success){try{document.getElementById('nReward').textContent=(BigInt(n.data.blockReward||0)/BigInt(1e18)).toString()+' NOSH';document.getElementById('nHalving').textContent=(n.data.blocksUntilNextHalving||0).toLocaleString()}catch(e){document.getElementById('nReward').textContent='—';document.getElementById('nHalving').textContent='—'}}
+  if(m&&m.success){try{const d=m.data;document.getElementById('netMetrics').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><span style="color:var(--muted)">Uptime</span><br><b>${Math.floor((d.uptime||0)/60)}m</b></div><div><span style="color:var(--muted)">Heap</span><br><b>${Math.round((d.memory?.heapUsed||0)/1024/1024)} MB</b></div><div><span style="color:var(--muted)">Blocks</span><br><b>${d.blockchain?.blocks||'—'}</b></div><div><span style="color:var(--muted)">Difficulty</span><br><b>${d.blockchain?.difficulty||'—'}</b></div></div>`}catch(e){document.getElementById('netMetrics').innerHTML='<span style="color:var(--red)">Failed to load metrics</span>'}}
+  if(p&&p.success){document.getElementById('netPeers').innerHTML=p.data?.peers?.length? p.data.peers.map(u=>`<div class="row"><span class="mono" style="font-size:12px">${u}</span><span class="badge badge-green">connected</span></div>`).join(''):'<div style="padding:16px;text-align:center;color:var(--muted)">No peers</div>'}else{document.getElementById('netPeers').innerHTML='<div style="padding:16px;text-align:center;color:var(--red)">Failed to load peers</div>'}
 }
 let chartB, chartM;
 function initCharts(){
   try{
     const cB=document.getElementById('chartBlocks'), cM=document.getElementById('chartMempool');
     if(!cB||!cM||typeof Chart==='undefined') return;
-    chartB=new Chart(cB,{type:'line',data:{labels:[],datasets:[{label:'Blocks',data:[],borderColor:'#D4AF37',backgroundColor:'rgba(212,175,55,.1)',tension:.4,fill:true,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{beginAtZero:true,grid:{color:'rgba(37,42,60,.5)'},ticks:{color:'#8B8FA3',font:{size:10}}}}}});
-    chartM=new Chart(cM,{type:'bar',data:{labels:[],datasets:[{label:'Mempool',data:[],backgroundColor:'rgba(14,203,129,.6)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{beginAtZero:true,grid:{color:'rgba(37,42,60,.5)'},ticks:{color:'#8B8FA3',font:{size:10}}}}}});
+    chartB=new Chart(cB,{type:'line',data:{labels:[],datasets:[{label:'Blocks',data:[],borderColor:'#D4AF37',backgroundColor:'rgba(212,175,55,.15)',tension:.4,fill:true,pointRadius:0,pointHoverRadius:6,pointHoverBackgroundColor:'#D4AF37',pointHoverBorderColor:'#fff',pointHoverBorderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'var(--card)',titleColor:'var(--text)',bodyColor:'var(--muted)',borderColor:'var(--border)',borderWidth:1,padding:12,displayColors:false}},scales:{x:{display:false},y:{beginAtZero:true,grid:{color:'rgba(37,42,60,.5)'},ticks:{color:'#8B8FA3',font:{size:10}}}},interaction:{intersect:false,mode:'index'}}});
+    chartM=new Chart(cM,{type:'bar',data:{labels:[],datasets:[{label:'Mempool',data:[],backgroundColor:'rgba(14,203,129,.6)',borderRadius:4,hoverBackgroundColor:'rgba(14,203,129,.8)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'var(--card)',titleColor:'var(--text)',bodyColor:'var(--muted)',borderColor:'var(--border)',borderWidth:1,padding:12,displayColors:false}},scales:{x:{display:false},y:{beginAtZero:true,grid:{color:'rgba(37,42,60,.5)'},ticks:{color:'#8B8FA3',font:{size:10}}}},interaction:{intersect:false,mode:'index'}}});
   }catch(e){console.log('charts init',e)}
 }
 function updateCharts(blocks, mempool){
   try{
     const now=new Date().toLocaleTimeString().slice(0,5);
-    if(chartB){chartB.data.labels.push(now);chartB.data.datasets[0].data.push(blocks);if(chartB.data.labels.length>20){chartB.data.labels.shift();chartB.data.datasets[0].data.shift()}chartB.update('none')}
-    if(chartM){chartM.data.labels.push(now);chartM.data.datasets[0].data.push(mempool);if(chartM.data.labels.length>20){chartM.data.labels.shift();chartM.data.datasets[0].data.shift()}chartM.update('none')}
-  }catch(e){}
+    if(chartB){chartB.data.labels.push(now);chartB.data.datasets[0].data.push(blocks);if(chartB.data.labels.length>30){chartB.data.labels.shift();chartB.data.datasets[0].data.shift()}chartB.update('none')}
+    if(chartM){chartM.data.labels.push(now);chartM.data.datasets[0].data.push(mempool);if(chartM.data.labels.length>30){chartM.data.labels.shift();chartM.data.datasets[0].data.shift()}chartM.update('none')}
+  }catch(e){console.error('Chart update error:',e)}
+}
+function animateValue(element, start, end, duration){
+  const range=end-start;
+  const startTime=performance.now();
+  function update(currentTime){
+    const elapsed=currentTime-startTime;
+    const progress=Math.min(elapsed/duration,1);
+    const value=Math.floor(start+range*progress);
+    element.textContent=value.toLocaleString();
+    if(progress<1)requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
 }
 const _origLoadDashboard2 = loadDashboard;
 loadDashboard = async function(){
   await _origLoadDashboard2();
   try{
     const s=await api('/status');
-    if(s&&s.success) updateCharts(s.data.blocks, s.data.mempoolSize);
-  }catch(e){}
+    if(s&&s.success) updateCharts(s.data.blocks||0, s.data.mempoolSize||0);
+  }catch(e){console.error('Chart data fetch error:',e)}
 };
-document.addEventListener('DOMContentLoaded', ()=>{setTimeout(initCharts,800)});
-loadDashboard();loadNetwork();
+document.addEventListener('DOMContentLoaded', ()=>{setTimeout(initCharts,500);loadDashboard();loadNetwork()});
 setInterval(loadDashboard,5000);
+setInterval(loadNetwork,30000);
 </script>
 </body>
 </html>
