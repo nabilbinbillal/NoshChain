@@ -80,8 +80,8 @@ body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);min-hei
     <div class="card" style="margin-bottom:24px">
       <div class="card-head">📈 Real-time Analytics <span style="font-size:11px;color:var(--green)">● Live</span></div>
       <div class="card-body" style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
-        <div><canvas id="chartBlocks" height="140"></canvas></div>
-        <div><canvas id="chartMempool" height="140"></canvas></div>
+        <div><canvas id="chartBlocks" height="120"></canvas></div>
+        <div><canvas id="chartMempool" height="120"></canvas></div>
       </div>
     </div>
     <div class="grid2">
@@ -155,30 +155,29 @@ async function loadNetwork(){
 }
 let chartB, chartM;
 function initCharts(){
-  const ctxB=document.getElementById('chartBlocks');
-  const ctxM=document.getElementById('chartMempool');
-  if(!ctxB||!ctxM||typeof Chart==='undefined') return;
-  chartB=new Chart(ctxB,{type:'line',data:{labels:[],datasets:[{label:'Blocks',data:[],borderColor:'#D4AF37',backgroundColor:'rgba(212,175,55,.1)',tension:.4,fill:true,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{beginAtZero:true,grid:{color:'rgba(37,42,60,.5)'},ticks:{color:'#8B8FA3',font:{size:10}}}}}});
-  chartM=new Chart(ctxM,{type:'bar',data:{labels:[],datasets:[{label:'Mempool',data:[],backgroundColor:'rgba(14,203,129,.6)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{beginAtZero:true,grid:{color:'rgba(37,42,60,.5)'},ticks:{color:'#8B8FA3',font:{size:10}}}}}});
+  try{
+    const cB=document.getElementById('chartBlocks'), cM=document.getElementById('chartMempool');
+    if(!cB||!cM||typeof Chart==='undefined') return;
+    chartB=new Chart(cB,{type:'line',data:{labels:[],datasets:[{label:'Blocks',data:[],borderColor:'#D4AF37',backgroundColor:'rgba(212,175,55,.1)',tension:.4,fill:true,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{beginAtZero:true,grid:{color:'rgba(37,42,60,.5)'},ticks:{color:'#8B8FA3',font:{size:10}}}}}});
+    chartM=new Chart(cM,{type:'bar',data:{labels:[],datasets:[{label:'Mempool',data:[],backgroundColor:'rgba(14,203,129,.6)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{beginAtZero:true,grid:{color:'rgba(37,42,60,.5)'},ticks:{color:'#8B8FA3',font:{size:10}}}}}});
+  }catch(e){console.log('charts init',e)}
 }
-function pushChart(c, label, value){
-  if(!c) return;
-  c.data.labels.push(label);
-  c.data.datasets[0].data.push(value);
-  if(c.data.labels.length>20){c.data.labels.shift();c.data.datasets[0].data.shift();}
-  c.update('none');
-}
-const _origLoadDashboard = loadDashboard;
-loadDashboard = async function(){
-  await _origLoadDashboard();
-  const s=await api('/status');
-  if(s&&s.success){
+function updateCharts(blocks, mempool){
+  try{
     const now=new Date().toLocaleTimeString().slice(0,5);
-    pushChart(chartB, now, s.data.blocks);
-    pushChart(chartM, now, s.data.mempoolSize);
-  }
+    if(chartB){chartB.data.labels.push(now);chartB.data.datasets[0].data.push(blocks);if(chartB.data.labels.length>20){chartB.data.labels.shift();chartB.data.datasets[0].data.shift()}chartB.update('none')}
+    if(chartM){chartM.data.labels.push(now);chartM.data.datasets[0].data.push(mempool);if(chartM.data.labels.length>20){chartM.data.labels.shift();chartM.data.datasets[0].data.shift()}chartM.update('none')}
+  }catch(e){}
+}
+const _origLoadDashboard2 = loadDashboard;
+loadDashboard = async function(){
+  await _origLoadDashboard2();
+  try{
+    const s=await api('/status');
+    if(s&&s.success) updateCharts(s.data.blocks, s.data.mempoolSize);
+  }catch(e){}
 };
-document.addEventListener('DOMContentLoaded', ()=>{setTimeout(initCharts,500)});
+document.addEventListener('DOMContentLoaded', ()=>{setTimeout(initCharts,800)});
 loadDashboard();loadNetwork();
 setInterval(loadDashboard,5000);
 </script>
