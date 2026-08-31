@@ -1357,8 +1357,14 @@ async function loadNetwork() {
 
     if (m && m.success && m.data) {
       const d = m.data;
+      const up = d.uptime || 0;
+      let upStr = '—';
+      if (up < 60) upStr = `${Math.floor(up)}s`;
+      else if (up < 3600) upStr = `${Math.floor(up/60)}m ${Math.floor(up%60)}s`;
+      else if (up < 86400) upStr = `${Math.floor(up/3600)}h ${Math.floor((up%3600)/60)}m`;
+      else upStr = `${Math.floor(up/86400)}d ${Math.floor((up%86400)/3600)}h`;
       document.getElementById('netMetrics').innerHTML = `
-        <div><span style="color:var(--muted)">Uptime:</span> <b>${Math.floor((d.uptime || 0) / 60)} minutes</b></div>
+        <div><span style="color:var(--muted)">Uptime:</span> <b>${upStr}</b> <span style="color:var(--muted);font-size:11px">(${up.toFixed(0)}s)</span></div>
         <div><span style="color:var(--muted)">Memory (Heap Used):</span> <b>${Math.round((d.memory?.heapUsed || 0) / 1024 / 1024)} MB</b></div>
         <div><span style="color:var(--muted)">Chain Work:</span> <b class="mono">${d.blockchain?.chainWork || '—'}</b></div>
         <div><span style="color:var(--muted)">Chain Height:</span> <b>#${d.blockchain?.blocks || '—'}</b></div>
