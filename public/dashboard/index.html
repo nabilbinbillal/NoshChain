@@ -617,20 +617,53 @@ function showToast(msg, type = 'info') {
   t.style.borderColor = type === 'success' ? 'var(--green)' : type === 'error' ? 'var(--red)' : 'var(--gold)';
   t.innerHTML = msg;
   document.body.appendChild(t);
-  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+function copyText(text) {
+  copyCurlText(encodeURIComponent(text));
 }
 
-function copyText(text, el) {
-  navigator.clipboard.writeText(text).then(() => {
+function copyCurlText(encodedText) {
+  const text = decodeURIComponent(encodedText);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('✓ Copied to clipboard', 'success');
+    }).catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand('copy');
     showToast('✓ Copied to clipboard', 'success');
-  }).catch(() => showToast('Failed to copy', 'error'));
+  } catch(e) {
+    showToast('Could not copy text', 'error');
+  }
+  document.body.removeChild(ta);
 }
 
 async function api(path, options = {}) {
   try {
-    const r = await fetch(API_BASE + path, {
+    let cleanPath = path;
+    if (cleanPath.startsWith('/api/')) {
+      cleanPath = cleanPath.substring(4);
+    } else if (cleanPath.startsWith('api/')) {
+      cleanPath = cleanPath.substring(3);
+    } else if (cleanPath.startsWith('/api')) {
+      cleanPath = cleanPath.substring(4);
+    }
+    if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
+
+    const url = API_BASE + cleanPath;
+    const r = await fetch(url, {
       ...options,
-      headers: { 'Content-Type': 'application/json', ...options.headers }
+      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }
     });
     const json = await r.json();
     if (!r.ok && !json.error) throw new Error(`HTTP ${r.status}`);
@@ -1254,17 +1287,66 @@ function renderApiDocs() {
 async function executeApiTest(path, method, outputId) {
   const out = document.getElementById(outputId);
   out.style.display = 'block';
-  out.innerHTML = '<span class="spinner"></span> Executing request...';
+  out.innerHTML = '<div style="font-size:12px;color:var(--gold);padding:6px 0;"><span class="spinner"></span> Executing request to ' + path + '...</div>';
 
-  if (method === 'GET') {
-    const res = await api(path.replace(':address', '27982254690517c92abd56fd0f4871f60aee92f6').replace(':height', '0').replace(':hash', '233e39bb34acd115880d2ddf6c3e7ab773f8171c407633cb37f59157ddbf572d'));
+  const t0 = performance.now();
+  try {
+    let testPath = path;
+    if (testPath.includes(':address')) {
+      testPath = testPath.replace(':address', '27982254690517c92abd56fd0f4871f60aee92f6');
+    }
+    if (testPath.includes(':height')) {
+      testPath = testPath.replace(':height', '0');
+    }
+    if (testPath.includes(':hash')) {
+      testPath = testPath.replace(':hash', '233e39bb34acd115880d2ddf6c3e7ab773f8171c407633cb37f59157ddbf572d');
+    }
+
+    let res;
+    if (method === 'GET') {
+      res = await api(testPath);
+    } else if (path === '/api/wallet/create') {
+      res = await api(testPath, {
+        method: 'POST',
+        body: JSON.stringify({ name: 'api-demo-wallet-' + Math.floor(Math.random() * 1000) })
+      });
+    } else if (path === '/api/tokens/create') {
+      res = await api(testPath, {
+        method: 'POST',
+        body: JSON.stringify({
+          name: 'Nosh Gold',
+          symbol: 'NGLD',
+          decimals: 18,
+          totalSupply: '1000000000000000000000000',
+          creator: '27982254690517c92abd56fd0f4871f60aee92f6'
+        })
+      });
+    } else {
+      out.innerHTML = `
+        <div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:4px">POST Endpoint ready. Use cURL or client SDK with signed transaction payload.</div>
+        <div class="api-code-block" style="color:var(--muted)">Example Payload:\n{\n  "from": "0x...",\n  "to": "0x...",\n  "amount": "1.5",\n  "signature": "0x..."\n}</div>
+      `;
+      return;
+    }
+
+    const elapsed = Math.round(performance.now() - t0);
+    const isSuccess = res && (res.success !== false);
+    const statusBadge = isSuccess
+      ? `<span style="color:var(--green);font-weight:800">HTTP 200 OK</span> <span style="color:var(--muted)">(${elapsed}ms)</span>`
+      : `<span style="color:var(--red);font-weight:800">HTTP ${res?.error?.code || 'Error'}</span> <span style="color:var(--muted)">(${elapsed}ms)</span>`;
+
     out.innerHTML = `
-      <div style="font-size:11px;color:var(--green);font-weight:700;margin-bottom:4px">HTTP 200 OK — Live Response:</div>
-      <div class="api-code-block" style="max-height:250px;overflow-y:auto">${JSON.stringify(res, null, 2)}</div>
+      <div style="font-size:11px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between">
+        <div>${statusBadge}</div>
+        <button class="api-copy-btn" style="position:static;" onclick="copyCurlText('${encodeURIComponent(JSON.stringify(res, null, 2))}')">Copy Response</button>
+      </div>
+      <div class="api-code-block" style="max-height:280px;overflow-y:auto;white-space:pre-wrap;word-break:break-all">${JSON.stringify(res, null, 2)}</div>
     `;
-  } else {
+  } catch (err) {
+    const elapsed = Math.round(performance.now() - t0);
     out.innerHTML = `
-      <div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:4px">POST Endpoint ready. Use cURL or client SDK with signed transaction payload.</div>
+      <div style="font-size:11px;color:var(--red);font-weight:800;margin-bottom:4px">Request Failed (${elapsed}ms)</div>
+      <div class="api-code-block" style="color:var(--red)">${err.message || 'Network error'}</div>
     `;
   }
 }
