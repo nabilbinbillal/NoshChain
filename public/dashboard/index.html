@@ -6,7 +6,8 @@
 <title>NoshChain Explorer — Blockchain & Node Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Rubik+80s+Fade&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Geist+Pixel&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -62,8 +63,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   animation:spin-ring 4s linear infinite;
 }
 .logo-n{
-  font-family:'Rubik 80s Fade',sans-serif;
-  font-size:22px;
+  font-family:'Geist Pixel',monospace;
+  font-size:26px;
   line-height:1;
   background:linear-gradient(180deg,var(--gold2) 0%,var(--gold) 100%);
   background-clip:text;
@@ -256,6 +257,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         <div class="card-body" id="dashMempool">
           <div style="padding:24px;text-align:center;color:var(--muted);font-size:13px"><span class="spinner"></span> Loading mempool...</div>
         </div>
+      </div>
+    </div>
+
+    <!-- REAL-TIME CHARTS & METRICS -->
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-head">
+        <span>📈 Real-Time Block & Transaction Metrics</span>
+        <span style="font-size:11.5px;color:var(--muted)">Dynamic Block History & Throughput</span>
+      </div>
+      <div class="card-body" style="padding:16px 20px;height:220px;position:relative">
+        <canvas id="dashChart"></canvas>
       </div>
     </div>
 
@@ -513,6 +525,91 @@ async function api(path, options = {}) {
   }
 }
 
+let myChart = null;
+function updateActivityChart(blocks) {
+  const ctx = document.getElementById('dashChart');
+  if (!ctx || !window.Chart) return;
+
+  const sorted = [...blocks].sort((a, b) => a.height - b.height).slice(-15);
+  const labels = sorted.map(b => '#' + b.height);
+  const txCounts = sorted.map(b => b.transactionCount || 0);
+  const difficulties = sorted.map(b => b.difficulty || 1);
+
+  if (myChart) {
+    myChart.data.labels = labels;
+    myChart.data.datasets[0].data = txCounts;
+    myChart.data.datasets[1].data = difficulties;
+    myChart.update();
+    return;
+  }
+
+  myChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Transactions in Block',
+          data: txCounts,
+          borderColor: '#D4AF37',
+          backgroundColor: 'rgba(212, 175, 55, 0.15)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.35,
+          pointRadius: 4,
+          pointBackgroundColor: '#F0D060',
+        },
+        {
+          label: 'Block Difficulty',
+          data: difficulties,
+          borderColor: '#3B82F6',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: [4, 4],
+          tension: 0.1,
+          pointRadius: 3,
+          pointBackgroundColor: '#3B82F6',
+          yAxisID: 'y1',
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          labels: { color: '#E6E8EC', font: { family: 'Inter', size: 11.5 } }
+        },
+        tooltip: {
+          backgroundColor: '#1C2030',
+          titleColor: '#F0D060',
+          bodyColor: '#E6E8EC',
+          borderColor: '#252A3C',
+          borderWidth: 1
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(37, 42, 60, 0.5)' },
+          ticks: { color: '#8B8FA3', font: { family: 'JetBrains Mono', size: 10 } }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(37, 42, 60, 0.5)' },
+          ticks: { color: '#8B8FA3', precision: 0 }
+        },
+        y1: {
+          position: 'right',
+          beginAtZero: true,
+          grid: { drawOnChartArea: false },
+          ticks: { color: '#3B82F6', precision: 0 }
+        }
+      }
+    }
+  });
+}
+
 async function loadDashboard() {
   try {
     const s = await api('/status');
@@ -551,9 +648,10 @@ async function loadDashboard() {
       document.getElementById('sTokenSupply').textContent = net.data.circulatingSupply ? (BigInt(net.data.circulatingSupply) / BigInt(1e18)).toLocaleString() + ' NOSH' : '—';
     }
 
-    const bl = await api('/blocks?limit=5&offset=0');
+    const bl = await api('/blocks?limit=15&offset=0');
     if (bl && bl.success && bl.data?.blocks?.length) {
-      const latest = [...bl.data.blocks].reverse();
+      updateActivityChart(bl.data.blocks);
+      const latest = [...bl.data.blocks].reverse().slice(0, 5);
       document.getElementById('dashBlocks').innerHTML = latest.map(b => `
         <div class="row" onclick="showBlockDetails(${b.height}, '${b.hash}')" style="cursor:pointer">
           <div>
@@ -665,29 +763,66 @@ async function loadTxs() {
 }
 
 async function lookupTx() {
-  const h = document.getElementById('txHashInput').value.trim();
-  if (!h) return showToast('Please enter a transaction hash', 'error');
+  const query = document.getElementById('txHashInput').value.trim();
+  if (!query) return showToast('Please enter a transaction hash, address, or block height', 'error');
   const resEl = document.getElementById('txResult');
-  resEl.innerHTML = '<span class="spinner"></span> Searching...';
-  
-  const r = await api('/transactions/' + h);
+  resEl.innerHTML = '<span class="spinner"></span> Searching chain...';
+
+  // 1. If it's a 40-character address
+  if (/^[0-9a-fA-F]{40}$/.test(query)) {
+    const r = await api('/address/' + query.toLowerCase());
+    const txsRes = await api('/address/' + query.toLowerCase() + '/transactions?limit=10');
+    if (r && r.success && r.data) {
+      const d = r.data;
+      const txs = txsRes?.data?.transactions || [];
+      resEl.innerHTML = `
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px">
+          <div style="font-weight:700;margin-bottom:8px;color:var(--gold)">👛 Account Address Found</div>
+          <div style="font-size:12px;line-height:1.7">
+            <b>Address:</b> <span class="mono">${d.address}</span> <button class="btn btn-ghost btn-sm" onclick="copyText('${d.address}')">Copy</button><br>
+            <b>Balance:</b> <b style="color:var(--gold)">${(BigInt(d.balance || 0) / BigInt(1e18)).toString()} NOSH</b> (${d.balance} wei)<br>
+            <b>Nonce:</b> ${d.nonce} • <b>Total Transactions:</b> ${d.transactionCount || txs.length}<br>
+            ${txs.length ? `<div style="margin-top:8px"><b>Recent Address Transactions (${txs.length}):</b></div>
+              <div style="max-height:140px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px;margin-top:4px">
+                ${txs.map(x => `<div style="font-size:11px;padding:4px 0;border-bottom:1px solid var(--border)"><span class="mono">${x.hash ? x.hash.slice(0, 14) + '…' : '—'}</span>: ${(BigInt(x.amount || 0)/BigInt(1e18)).toString()} NOSH</div>`).join('')}
+              </div>` : ''}
+          </div>
+        </div>
+      `;
+      return;
+    }
+  }
+
+  // 2. If it's a numeric block height
+  if (/^\d+$/.test(query)) {
+    const b = await api('/blocks/' + query);
+    if (b && b.success && b.data) {
+      showBlockDetails(b.data.index, b.data.hash);
+      resEl.innerHTML = `<span style="color:var(--green)">✓ Opened Block #${b.data.index} in modal</span>`;
+      return;
+    }
+  }
+
+  // 3. Otherwise treat as 64-char transaction hash
+  const r = await api('/transactions/' + query);
   if (r && r.success && r.data) {
     const t = r.data;
+    const txObj = t.transaction || t;
     resEl.innerHTML = `
       <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px">
-        <div style="font-weight:700;margin-bottom:8px;color:var(--green)">✓ Transaction Found</div>
+        <div style="font-weight:700;margin-bottom:8px;color:var(--green)">✓ Transaction Found (${t.status || 'confirmed'})</div>
         <div style="font-size:12px;line-height:1.7">
-          <b>Status:</b> <span class="badge badge-green">${t.status || 'confirmed'}</span><br>
-          <b>Hash:</b> <span class="mono">${t.hash}</span><br>
-          <b>From:</b> <span class="mono">${t.from || t.transaction?.from}</span><br>
-          <b>To:</b> <span class="mono">${t.to || t.transaction?.to}</span><br>
-          <b>Amount:</b> ${(BigInt(t.amount || t.transaction?.amount || 0) / BigInt(1e18)).toString()} NOSH<br>
-          <b>Fee:</b> ${t.fee || t.transaction?.fee} wei
+          <b>Status:</b> <span class="badge ${t.status === 'pending' ? 'badge-gold' : 'badge-green'}">${t.status || 'confirmed'}</span> ${t.blockHeight !== undefined ? `• Block <b>#${t.blockHeight}</b>` : ''}<br>
+          <b>Hash:</b> <span class="mono">${t.hash || query}</span> <button class="btn btn-ghost btn-sm" onclick="copyText('${t.hash || query}')">Copy</button><br>
+          <b>From:</b> <span class="mono">${txObj.from}</span><br>
+          <b>To:</b> <span class="mono">${txObj.to}</span><br>
+          <b>Amount:</b> <b style="color:var(--gold)">${(BigInt(txObj.amount || 0) / BigInt(1e18)).toString()} NOSH</b> (${txObj.amount} wei)<br>
+          <b>Fee:</b> ${txObj.fee || 0} wei • <b>Nonce:</b> ${txObj.nonce ?? '—'}
         </div>
       </div>
     `;
   } else {
-    resEl.innerHTML = `<span style="color:var(--red)">${r?.error?.message || 'Transaction not found'}</span>`;
+    resEl.innerHTML = `<span style="color:var(--red)">${r?.error?.message || 'Transaction / Address not found. Verify the hash or address format.'}</span>`;
   }
 }
 

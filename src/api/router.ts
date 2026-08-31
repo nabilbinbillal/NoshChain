@@ -441,10 +441,10 @@ export async function handleApiRequest(
     }
 
     const txHashMatch = url.pathname.match(
-      /^\/api\/transactions\/([0-9a-f]{64})$/
+      /^\/api\/transactions\/([0-9a-fA-F]{64})$/
     );
     if (req.method === "GET" && txHashMatch) {
-      const hash = txHashMatch[1]!;
+      const hash = txHashMatch[1]!.toLowerCase();
       const indexed = findTransaction(chain, mempool, hash);
       if (!indexed) {
         sendError(res, 404, "TRANSACTION_NOT_FOUND", "Transaction not found");
@@ -452,6 +452,27 @@ export async function handleApiRequest(
       }
 
       sendSuccess(res, 200, indexed);
+      return true;
+    }
+
+    const invalidTxMatch = url.pathname.match(/^\/api\/transactions\/([^/]+)$/);
+    if (req.method === "GET" && invalidTxMatch) {
+      const param = invalidTxMatch[1]!;
+      if (/^[0-9a-fA-F]{40}$/.test(param)) {
+        sendError(
+          res,
+          400,
+          "IS_ACCOUNT_ADDRESS",
+          `'${param}' is a 40-character account address, not a 64-character transaction hash. Use the Check Balance / Account tool instead.`
+        );
+      } else {
+        sendError(
+          res,
+          400,
+          "INVALID_TRANSACTION_HASH",
+          "Transaction hash must be a 64-character hexadecimal string"
+        );
+      }
       return true;
     }
 
