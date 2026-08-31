@@ -669,13 +669,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </div>
 
 <script>
-const isCustomPort = window.location.port === '3000';
-const API_BASE = isCustomPort 
-  ? window.location.protocol + '//' + window.location.hostname + ':3001/api'
-  : window.location.origin + '/api';
-const WS_URL = isCustomPort
-  ? (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.hostname + ':3001/ws'
-  : (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws';
+const API_BASE = window.location.origin + '/api';
+const WS_URL = (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws';
 
 let ws;
 function connectWS() {
