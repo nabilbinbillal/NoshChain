@@ -158,3 +158,45 @@ test("mismatched initial difficulty rejects otherwise valid chain", () => {
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("token transaction native cost is fee only", async () => {
+  const { transactionCost } = await import("../state.js");
+
+  const tx = {
+    from: "1111111111111111111111111111111111111111",
+    to: "2222222222222222222222222222222222222222",
+    amount: "500000000000000000000",
+    fee: "1000000000000000",
+    nonce: 0,
+    signature: "x",
+    publicKey: "x",
+    chainId: "13371337",
+    tokenId: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    tokenAction: "transfer" as const,
+  };
+
+  assert.equal(
+    transactionCost(tx),
+    1000000000000000n
+  );
+});
+
+test("native transaction cost remains amount plus fee", async () => {
+  const { transactionCost } = await import("../state.js");
+
+  const tx = {
+    from: "1111111111111111111111111111111111111111",
+    to: "2222222222222222222222222222222222222222",
+    amount: "5000000000000000000",
+    fee: "1000000000000000",
+    nonce: 0,
+    signature: "x",
+    publicKey: "x",
+    chainId: "13371337",
+  };
+
+  assert.equal(
+    transactionCost(tx),
+    5001000000000000000n
+  );
+});

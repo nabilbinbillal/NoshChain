@@ -135,7 +135,15 @@ export function formatBalances(
 }
 
 export function transactionCost(tx: Transaction): bigint {
-  return BigInt(tx.amount) + BigInt(tx.fee);
+  // Native transaction:
+  //   native balance cost = amount + fee
+  //
+  // Token transaction:
+  //   amount is denominated in the token itself,
+  //   so only the native NOSH fee is charged here.
+  return isTokenTransaction(tx)
+    ? BigInt(tx.fee)
+    : BigInt(tx.amount) + BigInt(tx.fee);
 }
 
 export function transactionKey(tx: Transaction): string {

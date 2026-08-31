@@ -39,8 +39,7 @@ export function tokenIdFromCreation(
 export function isTokenTransaction(tx: Transaction): boolean {
   return (
     (tx.tokenAction === "transfer" || tx.tokenAction === "create") &&
-    typeof tx.tokenId === "string" &&
-    validateTokenId(tx.tokenId)
+    typeof tx.tokenId === "string"
   );
 }
 

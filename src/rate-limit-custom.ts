@@ -104,6 +104,6 @@ export class RateLimiter {
   }
 }
 
-export const strictRateLimiter = new RateLimiter(15 * 60 * 1000, 50);
-export const standardRateLimiter = new RateLimiter(15 * 60 * 1000, 100);
-export const looseRateLimiter = new RateLimiter(15 * 60 * 1000, 200);
+export const strictRateLimiter = new RateLimiter(15 * 60 * 1000, 100);
+export const standardRateLimiter = new RateLimiter(15 * 60 * 1000, 600);
+export const looseRateLimiter = new RateLimiter(15 * 60 * 1000, 1200);

@@ -117,6 +117,7 @@ body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);min-hei
     <button data-p="wallets">Wallets</button>
     <button data-p="tokens">Tokens</button>
     <button data-p="network">Network</button>
+    <button data-p="api">API Docs</button>
   </div>
   <div class="live"><span class="dot"></span><span id="liveText">Live</span> <span id="connDot" style="width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;margin-left:4px"></span></div>
   <div class="api-status" id="apiStatus"><span id="apiDot" style="width:6px;height:6px;background:var(--gold);border-radius:50%;display:inline-block"></span><span id="apiText">Connecting...</span></div>
@@ -129,6 +130,7 @@ body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);min-hei
       <div class="stat"><label>Peers</label><strong id="sPeers">—</strong><small>connected</small></div>
       <div class="stat"><label>Mempool</label><strong id="sMempool">—</strong><small>pending</small></div>
       <div class="stat"><label>Difficulty</label><strong id="sDiff">—</strong><small>leading zeros</small></div>
+      <div class="stat gold"><label>Token Supply</label><strong id="sTokenSupply">—</strong><small>total NOSH</small></div>
     </div>
     <div class="card" style="margin-bottom:24px">
       <div class="card-head">📈 Real-time Analytics <span style="font-size:11px;color:var(--green)">● Live</span></div>
@@ -150,12 +152,29 @@ body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);min-hei
 <div id="blockModal" class="modal"><div class="modal-content"><button class="modal-close" onclick="closeBlockModal()">×</button><div class="modal-header" id="modalTitle">Block Details</div><div id="modalBody"></div></div></div>
   <div class="page" id="p-network"><div class="hero" style="padding:20px 28px"><h1 style="font-size:22px">Network</h1><p>Supply and metrics</p></div><div class="stats"><div class="stat"><label>Genesis Supply</label><strong style="font-size:16px">21M</strong><small>NOSH</small></div><div class="stat"><label>Max Supply</label><strong style="font-size:16px">231M</strong><small>NOSH</small></div><div class="stat"><label>Block Reward</label><strong id="nReward">—</strong><small>current era</small></div><div class="stat"><label>Halving In</label><strong id="nHalving">—</strong><small>blocks</small></div></div><div class="grid2"><div class="card"><div class="card-head">Node Metrics</div><div class="card-body" id="netMetrics" style="padding:16px;font-size:13px;line-height:1.8"></div></div><div class="card"><div class="card-head">Peers</div><div class="card-body" id="netPeers"></div></div></div></div>
 </div>
+
+<div class="page" id="p-api"><div class="hero" style="padding:20px 28px"><h1 style="font-size:22px">API Documentation</h1><p>Complete REST API reference for NoshChain</p></div><div class="card"><div class="card-head">Endpoints</div><div class="card-body" style="max-height:400px;overflow-y:auto;padding:16px;font-size:13px;line-height:1.6;border-radius:8px;background:var(--bg);color:var(--text)"><pre>GET /status - Chain status (blocks, peers, mempool, difficulty, latest block)
+GET /blocks?limit=&offset= - Get recent blocks (limit default 20, offset for pagination)
+GET /blocks/:hash - Get block by hash
+GET /address/:address/balance - Get address balance in NOSH
+GET /transaction - Submit signed transaction (POST, JSON body)
+GET /transactions/:hash - Get transaction by hash
+GET /mempool - View pending transactions
+GET /mine - Mine a block (POST, JSON: {miner: address})
+GET /network - Network supply metrics (maxSupply, genesisAllocation, blockReward, blocksUntilNextHalving)
+GET /peers - Connected peers list
+GET /tokens - List custom tokens
+GET /tokens/:id/balance/:address - Get custom token balance
+POST /wallet - Create new wallet (JSON: {name: string})
+POST /transfer - Transfer NOSH (JSON: {from: walletName, to: address, amount: wei, fee: finney})
+</pre></div></div></div></div>
 <script>
 const API='http://20.187.145.251:3001/api';
 const WS_URL='ws://20.187.145.251:3001/ws';
+const API_DOCS='/api-docs';
 let ws;let reconnectAttempts=0;const MAX_RECONNECT_ATTEMPTS=10;function connectWS(){try{ws=new WebSocket(WS_URL);ws.onopen=()=>{reconnectAttempts=0;document.getElementById('connDot').style.background='var(--green)';document.getElementById('liveText').textContent='Live'};ws.onmessage=e=>{try{const d=JSON.parse(e.data);if(d.type==='block')loadDashboard();if(d.type==='transaction')loadDashboard()}catch{}};ws.onclose=()=>{document.getElementById('connDot').style.background='var(--red)';document.getElementById('liveText').textContent='Reconnecting';if(reconnectAttempts<MAX_RECONNECT_ATTEMPTS){reconnectAttempts++;const delay=Math.min(3000*Math.pow(1.5,reconnectAttempts-1),30000);setTimeout(connectWS,delay)}else{document.getElementById('liveText').textContent='Offline'}};ws.onerror=()=>{document.getElementById('connDot').style.background='var(--red)'}}catch(e){console.error('WebSocket connection failed:',e)}}
 connectWS();
-function showPage(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById('p-'+p).classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.p===p));if(p==='blocks')loadBlocks();if(p==='txs')loadTxs();if(p==='tokens')loadTokens();if(p==='network')loadNetwork()}
+function showPage(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById('p-'+p).classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.p===p));if(p==='blocks')loadBlocks();if(p==='txs')loadTxs();if(p==='tokens')loadTokens();if(p==='network')loadNetwork();if(p==='api')loadApiDocs()}
 document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.p)));
 function fmtHash(h){return h?`<span class="hash mono" onclick="copyToClipboard('${h}', this)" title="${h}">${h.slice(0,10)}…${h.slice(-6)}</span>`:'—'}
 function fmtAddr(a){return a?`<span class="hash mono" onclick="copyToClipboard('${a}', this)" title="${a}">${a.slice(0,8)}…${a.slice(-6)}</span>`:'—'}
@@ -180,11 +199,13 @@ async function loadDashboard(){
       document.getElementById('sPeers').textContent=d.peers||'—';
       document.getElementById('sMempool').textContent=d.mempoolSize||'—';
       document.getElementById('sDiff').textContent=d.latestBlock?.difficulty||'—';
+      document.getElementById('sTokenSupply').textContent=d.totalSupply||'—';
       if(d.latestBlock){
         document.getElementById('dashBlocks').innerHTML=`<div class="row"><span>Height <b>#${d.latestBlock.height}</b></span><span>${fmtHash(d.latestBlock.hash)}</span></div><div class="row"><span>Miner</span><span>${fmtAddr(d.latestBlock.miner)}</span></div><div class="row"><span>Chain Work</span><span class="mono">${d.chainWork||'—'}</span></div>`;
       }
       document.getElementById('dashMempool').innerHTML=d.mempoolSize?`<div class="row"><span>Pending</span><span class="badge badge-gold">${d.mempoolSize} txs</span></div>`:`<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">No pending</div>`;
       document.getElementById('healthGrid').innerHTML=`<div><div style="color:var(--muted);font-size:11px">CONSENSUS</div><div style="font-weight:600">${d.consensus||'—'}</div></div><div><div style="color:var(--muted);font-size:11px">CHAIN ID</div><div class="mono">${d.chainId||'—'}</div></div><div><div style="color:var(--muted);font-size:11px">GENESIS</div><div class="mono" style="font-size:11px">${d.genesisHash?.slice(0,12)||'—'}…</div></div><div><div style="color:var(--muted);font-size:11px">NODE</div><div class="mono" style="font-size:11px">${d.node||'—'}</div></div>`;
+      updateCharts(d.blocks||0, d.mempoolSize||0);
     }
     const bl=await api('/blocks?limit=5&offset=0');
     if(bl&&bl.success&&bl.data?.blocks?.length){
@@ -355,14 +376,6 @@ function closeBlockModal(){
 document.getElementById('blockModal').addEventListener('click', (e) => {
   if(e.target.id==='blockModal') closeBlockModal();
 });
-const _origLoadDashboard2 = loadDashboard;
-loadDashboard = async function(){
-  await _origLoadDashboard2();
-  try{
-    const s=await api('/status');
-    if(s&&s.success) updateCharts(s.data.blocks||0, s.data.mempoolSize||0);
-  }catch(e){console.error('Chart data fetch error:',e)}
-};
 document.addEventListener('DOMContentLoaded', ()=>{
   console.log('Dashboard initializing...');
   updateApiStatus();
@@ -370,8 +383,24 @@ document.addEventListener('DOMContentLoaded', ()=>{
   loadDashboard().catch(e=>console.error('Initial dashboard load failed:',e));
   loadNetwork().catch(e=>console.error('Initial network load failed:',e));
 });
-setInterval(loadDashboard,5000);
+setInterval(loadDashboard,15000);
 setInterval(loadNetwork,30000);
+async function loadApiDocs(){
+  const el=document.getElementById('api-docs-body');
+  if(!el) return;
+  el.innerHTML='<div style="padding:24px;text-align:center"><span class="spinner"></span></div>';
+  try{
+    const r=await api('/status');
+    if(r&&r.success){
+      el.innerHTML=`<h3>Status</h3><pre>${JSON.stringify(r.data, null, 2)}</pre>`;
+    }else{
+      el.innerHTML='<div style="padding:16px;color:var(--red)">Failed to load API docs</div>';
+    }
+  }catch(e){
+    console.error('API docs load error:',e);
+    el.innerHTML='<div style="padding:16px;color:var(--red)">API Server Offline</div>';
+  }
+}
 </script>
 </body>
 </html>

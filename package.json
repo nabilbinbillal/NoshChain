@@ -16,7 +16,9 @@
     "test:e2e": "node --import tsx/esm --test src/tests/e2e.test.ts",
     "token:list": "tsx src/token-list.ts",
     "token:info": "tsx src/token-info.ts",
-    "token:balance": "tsx src/token-balance.ts"
+    "token:balance": "tsx src/token-balance.ts",
+    "build": "tsc",
+    "clean": "rm -f src/*.js src/*.js.map src/*.d.ts src/*.d.ts.map src/api/*.js src/api/*.js.map src/api/*.d.ts src/api/*.d.ts.map src/tests/*.js src/tests/*.js.map src/tests/*.d.ts src/tests/*.d.ts.map"
   },
   "keywords": [
     "blockchain",
@@ -33,6 +35,7 @@
     "@types/react-dom": "19.2.5",
     "better-sqlite3": "^13.0.3",
     "cors": "^2.8.6",
+    "dotenv": "^16.4.7",
     "express-rate-limit": "^8.7.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",

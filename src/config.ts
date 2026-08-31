@@ -1,3 +1,4 @@
+import { config as loadDotenv } from "dotenv";
 import {
   CHAIN_ID,
   NETWORK_NAME,
@@ -89,6 +90,7 @@ function validateConfig(config: NodeConfig): void {
 }
 
 export function loadConfig(): NodeConfig {
+  loadDotenv();
   const config = {
     port: Number(process.env.PORT ?? 3001),
     peerUrls: parsePeerUrls(process.env.PEER),

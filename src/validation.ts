@@ -442,31 +442,68 @@ export function verifyBlockInChain(
   return true;
 }
 
-export function validChain(
+export type ChainValidationResult = {
+  valid: boolean;
+  reason?: string;
+  errorBlockIndex?: number;
+};
+
+export function validateChainWithDetails(
   candidate: Chain,
   now = Date.now(),
   initialDifficulty = INITIAL_DIFFICULTY
-): boolean {
+): ChainValidationResult {
   if (!Array.isArray(candidate) || candidate.length === 0) {
-    return false;
+    return { valid: false, reason: "Candidate chain is empty or not an array" };
   }
 
   const genesis = candidate[0];
   if (!genesis || !verifyGenesisBlock(genesis)) {
-    return false;
+    return { valid: false, reason: "Genesis block failed verification", errorBlockIndex: 0 };
   }
 
   for (let i = 1; i < candidate.length; i++) {
     const block = candidate[i];
     if (!block) {
-      return false;
+      return { valid: false, reason: `Block at index ${i} is missing`, errorBlockIndex: i };
     }
-    if (!verifyBlockInChain(block, candidate, now, initialDifficulty)) {
-      return false;
+
+    const previous = candidate[i - 1];
+    if (!verifyBlock(block, previous, now)) {
+      return {
+        valid: false,
+        reason: `Block at height ${block.index} (hash ${block.hash.slice(0, 10)}) failed verifyBlock check`,
+        errorBlockIndex: i,
+      };
+    }
+
+    const expectedDifficulty = calculateExpectedDifficulty(
+      candidate.slice(0, block.index),
+      block.index,
+      initialDifficulty
+    );
+    if (block.difficulty !== expectedDifficulty) {
+      return {
+        valid: false,
+        reason: `Block at height ${block.index} difficulty mismatch: expected ${expectedDifficulty}, got ${block.difficulty} (initialDifficulty=${initialDifficulty})`,
+        errorBlockIndex: i,
+      };
     }
   }
 
-  return validateChainState(candidate);
+  if (!validateChainState(candidate)) {
+    return { valid: false, reason: "Chain state (balances/nonces/tokens) validation failed" };
+  }
+
+  return { valid: true };
+}
+
+export function validChain(
+  candidate: Chain,
+  now = Date.now(),
+  initialDifficulty = INITIAL_DIFFICULTY
+): boolean {
+  return validateChainWithDetails(candidate, now, initialDifficulty).valid;
 }
 
 export function compareChains(a: Chain, b: Chain): number {

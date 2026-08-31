@@ -14,7 +14,7 @@ import {
   mineBlockHeader,
   getChainWork,
 } from "./crypto.js";
-import { validChain, compareChains } from "./validation.js";
+import { validChain, compareChains, validateChainWithDetails } from "./validation.js";
 import {
   getBalance,
   getNonce,
@@ -75,8 +75,21 @@ export class Blockchain {
 
     const persisted = this.storage.loadState();
     if (persisted && persisted.chain.length > 0) {
-      if (!validChain(persisted.chain, Date.now(), config.initialDifficulty)) {
-        throw new Error("Stored blockchain failed validation");
+      const validation = validateChainWithDetails(
+        persisted.chain,
+        Date.now(),
+        config.initialDifficulty
+      );
+      if (!validation.valid) {
+        this.logger.error("Stored blockchain failed validation", {
+          reason: validation.reason,
+          errorBlockIndex: validation.errorBlockIndex,
+          initialDifficulty: config.initialDifficulty,
+          chainLength: persisted.chain.length,
+        });
+        throw new Error(
+          `Stored blockchain failed validation: ${validation.reason ?? "Unknown error"}`
+        );
       }
       this.chain = persisted.chain;
       this.mempool.load(persisted.mempool);

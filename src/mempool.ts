@@ -1,5 +1,6 @@
 import type { Transaction } from "./types.js";
 import { verifyTransaction } from "./validation.js";
+import { isTokenTransaction } from "./tokens.js";
 import {
   calculateBalances,
   calculateNonces,
@@ -86,8 +87,16 @@ export class Mempool {
 
       selected.push(tx);
       usedKeys.add(key);
+
+      // Only native NOSH transfers change the native balance of the
+      // recipient. Token amounts belong to token state, not NOSH state.
       balances[tx.from] = (balances[tx.from] ?? 0n) - cost;
-      balances[tx.to] = (balances[tx.to] ?? 0n) + BigInt(tx.amount);
+
+      if (!isTokenTransaction(tx)) {
+        balances[tx.to] =
+          (balances[tx.to] ?? 0n) + BigInt(tx.amount);
+      }
+
       nonces[tx.from] = expectedNonce + 1;
 
       if (selected.length >= maxTransactions) {
