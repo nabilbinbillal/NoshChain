@@ -617,6 +617,9 @@ function showToast(msg, type = 'info') {
   t.style.borderColor = type === 'success' ? 'var(--green)' : type === 'error' ? 'var(--red)' : 'var(--gold)';
   t.innerHTML = msg;
   document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+}
+
 function copyText(text) {
   copyCurlText(encodeURIComponent(text));
 }
