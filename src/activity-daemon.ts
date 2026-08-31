@@ -151,6 +151,10 @@ async function startDaemon() {
           difficulty: mineRes.block.difficulty,
           txCount: mineRes.block.transactions.length,
         });
+      } else if (mineRes && mineRes.error) {
+        logger.warn("Mining attempt failed", { error: mineRes.error });
+      } else {
+        logger.error("Unexpected mining response", { response: mineRes });
       }
     } catch (err) {
       logger.error("Error in mining cycle", { error: err });

@@ -288,8 +288,106 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-@media(max-width:1024px){.stats{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}}
-@media(max-width:768px){.stats{grid-template-columns:repeat(2,1fr)}.wallet-grid{grid-template-columns:1fr}.topbar{padding:0 16px}}
+.health-grid{padding:18px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;font-size:12.5px}
+
+/* Footer */
+.site-footer{border-top:1px solid var(--border);margin-top:32px;background:linear-gradient(180deg,transparent,rgba(212,175,55,0.03));padding:22px 24px 28px}
+.footer-inner{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.footer-line{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
+.footer-brand{font-size:12.5px;color:var(--muted)}
+.footer-brand strong{color:var(--text);font-weight:700}
+.footer-name{color:var(--text);font-weight:700;text-decoration:none;border-bottom:1px solid transparent;transition:color .2s ease,border-color .2s ease}
+.footer-name:hover{color:var(--gold);border-color:var(--gold)}
+.footer-github{display:inline-flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);text-decoration:none;border:1px solid var(--border);padding:5px 12px;border-radius:20px;transition:all .2s ease}
+.footer-github:hover{color:var(--gold);border-color:var(--gold);box-shadow:0 0 14px var(--gold-glow);transform:translateY(-1px)}
+.footer-github svg{transition:transform .2s ease}
+.footer-github:hover svg{transform:rotate(-8deg) scale(1.1)}
+.footer-dedication{gap:10px;margin-top:2px}
+.cipher-label{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);letter-spacing:.5px}
+.cipher-text{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+  letter-spacing:.5px;
+  color:var(--green);
+  background:rgba(14,203,129,.06);
+  border:1px solid rgba(14,203,129,.2);
+  padding:5px 10px;
+  border-radius:6px;
+  cursor:default;
+  word-break:break-all;
+  text-shadow:0 0 6px rgba(14,203,129,.35);
+  transition:border-color .25s ease,box-shadow .25s ease,color .25s ease;
+}
+.cipher-text:hover{
+  color:var(--gold2);
+  border-color:rgba(212,175,55,.4);
+  box-shadow:0 0 16px var(--gold-glow);
+  text-shadow:0 0 8px rgba(212,175,55,.5);
+}
+@media(max-width:640px){
+  .site-footer{padding:18px 14px 22px}
+  .cipher-text{font-size:10px;padding:4px 8px}
+  .footer-line{gap:10px}
+}
+
+/* ===== Responsive ===== */
+@media(max-width:1024px){
+  .stats{grid-template-columns:repeat(3,1fr)}
+  .grid2{grid-template-columns:1fr}
+}
+
+@media(max-width:768px){
+  .wrap{padding:16px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .wallet-grid{grid-template-columns:1fr}
+  .topbar{padding:0 14px;gap:8px}
+  .health-grid{grid-template-columns:repeat(2,1fr)}
+  .block-details-grid{grid-template-columns:repeat(2,1fr)}
+  .hero{padding:18px 20px}
+  .hero h1{font-size:21px}
+  .modal-content{padding:18px}
+}
+
+@media(max-width:640px){
+  .topbar{height:auto;min-height:56px;flex-wrap:wrap;padding:8px 12px}
+  .logo{font-size:16px;gap:8px;order:1}
+  .logo-icon{width:36px;height:36px}
+  .logo-n{font-size:21px}
+  .status-pills{order:2;margin-left:auto}
+  .live-pill{padding:5px 9px}
+  .live-pill span:not(.dot){display:none}
+  .nav{order:3;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;justify-content:flex-start}
+  .nav::-webkit-scrollbar{display:none}
+  .nav button{flex:0 0 auto;padding:8px 12px;font-size:12.5px;white-space:nowrap}
+  .wrap{padding:12px}
+  .hero{padding:16px;border-radius:12px}
+  .hero h1{font-size:19px}
+  .hero p{font-size:12.5px}
+  .stats{grid-template-columns:repeat(2,1fr);gap:10px}
+  .stat{padding:12px 14px}
+  .stat strong{font-size:19px}
+  .card-head{padding:12px 14px;font-size:13px;flex-wrap:wrap;gap:6px}
+  .row{padding:10px 14px;flex-wrap:wrap;gap:6px}
+  .wallet-grid{gap:12px}
+  .block-details-grid{grid-template-columns:1fr 1fr;font-size:11.5px}
+  .health-grid{grid-template-columns:1fr 1fr;padding:14px}
+  .modal-content{width:94%;padding:16px;border-radius:12px}
+  .modal-header{font-size:17px}
+  .modal-value{flex-wrap:wrap}
+  .api-doc-header{padding:12px 14px;flex-wrap:wrap;gap:6px}
+  .api-path{font-size:12px;margin-left:6px}
+  .api-doc-body{padding:14px}
+  .api-code-block{font-size:11px;padding:10px;padding-right:56px}
+  .api-copy-btn{font-size:10px;padding:3px 6px}
+  .btn{padding:9px 14px;font-size:12.5px}
+  .toast{left:12px;right:12px;bottom:12px;text-align:center}
+}
+
+@media(max-width:400px){
+  .stats{grid-template-columns:1fr}
+  .block-details-grid{grid-template-columns:1fr}
+  .health-grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -382,7 +480,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
     <div class="card">
       <div class="card-head">🛡️ Node Consensus & Health</div>
-      <div class="card-body" style="padding:18px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;font-size:12.5px" id="healthGrid">
+      <div class="card-body health-grid" id="healthGrid">
         <div><div style="color:var(--muted);font-size:11px;font-weight:600">CONSENSUS</div><div style="font-weight:700">Proof-of-Work</div></div>
         <div><div style="color:var(--muted);font-size:11px;font-weight:600">CHAIN ID</div><div class="mono" style="font-weight:700">13371337</div></div>
         <div><div style="color:var(--muted);font-size:11px;font-weight:600">GENESIS HASH</div><div class="mono" style="font-size:11px" id="hGenesis">233e39bb34ac…</div></div>
@@ -540,6 +638,26 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   </div>
 
 </div>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-line">
+      <span class="footer-brand">Made by <a href="https://nabilbinbillal.github.io/" target="_blank" rel="noopener noreferrer" class="footer-name">Nabil Bin Billal</a></span>
+    </div>
+    <div class="footer-line">
+      <a class="footer-github" href="https://github.com/nabilbinbillal/NoshChain" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"></path>
+        </svg>
+        <span>nabilbinbillal/NoshChain</span>
+      </a>
+    </div>
+    <div class="footer-line footer-dedication">
+      <span class="cipher-label">// dedicated to</span>
+      <span class="cipher-text" data-scramble="53616c7465645f5f54dbcbb7ab84e51ddf71b91f4d57d603f408a1089510db26">53616c7465645f5f54dbcbb7ab84e51ddf71b91f4d57d603f408a1089510db26</span>
+    </div>
+  </div>
+</footer>
 
 <!-- BLOCK DETAILS MODAL -->
 <div id="blockModal" class="modal">
@@ -1412,6 +1530,44 @@ async function executeApiTest(path, method, outputId) {
     `;
   }
 }
+
+/* Cyber-style scramble/decrypt hover effect */
+const SCRAMBLE_CHARS = '!<>-_\\/[]{}—=+*^?#$%&ABCDEF0123456789';
+function scrambleReveal(el) {
+  const original = el.dataset.scramble || el.textContent;
+  if (!el.dataset.scramble) el.dataset.scramble = original;
+  if (el._scrambleFrame) cancelAnimationFrame(el._scrambleFrame);
+
+  const len = original.length;
+  const revealDelay = 1.6; // how many "frames" each char takes to lock in
+  let frame = 0;
+  const totalFrames = Math.ceil(len * revealDelay) + 4;
+
+  const tick = () => {
+    let out = '';
+    for (let i = 0; i < len; i++) {
+      const lockFrame = i * revealDelay;
+      if (frame >= lockFrame) {
+        out += original[i];
+      } else {
+        out += SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+      }
+    }
+    el.textContent = out;
+    frame++;
+    if (frame <= totalFrames) {
+      el._scrambleFrame = requestAnimationFrame(tick);
+    } else {
+      el.textContent = original;
+      el._scrambleFrame = null;
+    }
+  };
+  tick();
+}
+document.querySelectorAll('.cipher-text').forEach(el => {
+  el.addEventListener('mouseenter', () => scrambleReveal(el));
+  el.addEventListener('focus', () => scrambleReveal(el));
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   loadDashboard();
