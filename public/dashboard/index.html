@@ -452,20 +452,23 @@ function connectWS() {
     ws = new WebSocket(WS_URL);
     ws.onopen = () => {
       document.getElementById('liveDot').style.background = 'var(--green)';
-      document.getElementById('liveText').textContent = 'Live (WS)';
+      document.getElementById('liveText').textContent = 'Live (WS Connected)';
+      ws.send(JSON.stringify({ type: 'subscribe', channels: ['all', 'blocks', 'transactions', 'mempool'] }));
     };
     ws.onmessage = (e) => {
       try {
         const d = JSON.parse(e.data);
-        if (d.type === 'block' || d.type === 'transaction') {
+        if (d.type === 'block' || d.type === 'transaction' || d.type === 'mempool') {
           loadDashboard();
+          if (document.getElementById('p-blocks').classList.contains('active')) loadBlocks();
+          if (document.getElementById('p-txs').classList.contains('active')) loadTxs();
         }
       } catch {}
     };
     ws.onclose = () => {
       document.getElementById('liveDot').style.background = 'var(--gold)';
-      document.getElementById('liveText').textContent = 'Live (HTTP)';
-      setTimeout(connectWS, 5000);
+      document.getElementById('liveText').textContent = 'Live (Polling)';
+      setTimeout(connectWS, 4000);
     };
   } catch {
     document.getElementById('liveDot').style.background = 'var(--gold)';
@@ -1158,7 +1161,7 @@ async function executeApiTest(path, method, outputId) {
 document.addEventListener('DOMContentLoaded', () => {
   loadDashboard();
   renderSavedWallets();
-  setInterval(loadDashboard, 15000);
+  setInterval(loadDashboard, 2500);
 });
 </script>
 </body>
