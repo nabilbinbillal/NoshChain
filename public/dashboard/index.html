@@ -404,6 +404,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <button data-p="api">API Docs</button>
   </div>
   <div class="status-pills">
+    <button class="btn btn-ghost btn-sm" onclick="hardRefresh()" title="Refresh all data" style="padding:6px 10px;border-radius:20px">↻ Refresh</button>
     <div class="live-pill"><span class="dot" id="liveDot"></span><span id="liveText">Live</span></div>
   </div>
 </div>
@@ -498,7 +499,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="card">
       <div class="card-head">
         All Mined Blocks
-        <span><button class="btn btn-ghost btn-sm" onclick="loadBlocks()">↻ Refresh</button></span>
+        <span><button class="btn btn-ghost btn-sm" onclick="hardRefresh(); showToast('↻ Blocks refreshed','success')">↻ Refresh</button></span>
       </div>
       <div class="card-body" id="blocksList" style="padding:18px"></div>
     </div>
@@ -773,6 +774,15 @@ window.addEventListener('popstate', () => handleRoute());
 window.addEventListener('hashchange', () => handleRoute());
 
 document.querySelectorAll('.nav button').forEach(b => b.addEventListener('click', () => showPage(b.dataset.p)));
+function hardRefresh(){
+  showToast('↻ Refreshing...','info');
+  loadDashboard().catch(()=>{});
+  loadBlocks().catch(()=>{});
+  loadTxs().catch(()=>{});
+  loadNetwork().catch(()=>{});
+  loadTokens().catch(()=>{});
+  setTimeout(()=>showToast('✓ Refreshed','success'), 800);
+}
 
 function fmtHash(h) {
   if (!h) return '—';
