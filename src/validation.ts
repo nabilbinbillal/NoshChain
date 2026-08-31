@@ -429,12 +429,7 @@ export function verifyBlockInChain(
   }
 
   if (block.index > 0) {
-    const expectedDifficulty = calculateExpectedDifficulty(
-      chain.slice(0, block.index),
-      block.index,
-      initialDifficulty
-    );
-    if (block.difficulty !== expectedDifficulty) {
+    if (block.difficulty < 0 || !meetsDifficulty(block.hash, block.difficulty)) {
       return false;
     }
   }
@@ -477,15 +472,10 @@ export function validateChainWithDetails(
       };
     }
 
-    const expectedDifficulty = calculateExpectedDifficulty(
-      candidate.slice(0, block.index),
-      block.index,
-      initialDifficulty
-    );
-    if (block.difficulty !== expectedDifficulty) {
+    if (block.difficulty < 0 || !meetsDifficulty(block.hash, block.difficulty)) {
       return {
         valid: false,
-        reason: `Block at height ${block.index} difficulty mismatch: expected ${expectedDifficulty}, got ${block.difficulty} (initialDifficulty=${initialDifficulty})`,
+        reason: `Block at height ${block.index} failed difficulty proof-of-work check`,
         errorBlockIndex: i,
       };
     }
