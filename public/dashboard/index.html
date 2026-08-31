@@ -1354,6 +1354,7 @@ async function executeApiTest(path, method, outputId) {
 document.addEventListener('DOMContentLoaded', () => {
   loadDashboard();
   renderSavedWallets();
+  renderApiDocs();
   setInterval(() => {
     loadDashboard();
     const blocksActive = document.getElementById('p-blocks')?.classList.contains('active');
