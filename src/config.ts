@@ -5,6 +5,7 @@ import {
   TARGET_BLOCK_TIME_MS,
   DIFFICULTY_ADJUSTMENT_INTERVAL,
   configuredInitialDifficulty,
+  GENESIS_ALLOCATION,
 } from "./types.js";
 import { createLogger } from "./logger.js";
 
@@ -26,6 +27,9 @@ export type NodeConfig = {
   enableWs: boolean;
   enableRateLimit: boolean;
   corsOrigins: string[];
+  automine?: boolean;
+  automineIntervalMs?: number;
+  minerAddress?: string;
 };
 
 function parsePeerUrls(value: string | undefined): string[] {
@@ -79,7 +83,14 @@ function validateConfig(config: NodeConfig): void {
     throw new Error(`Invalid node environment: ${config.nodeEnv}. Must be one of: ${validEnvs.join(", ")}`);
   }
 
-  // Validate peer URLs
+  if ((config.automineIntervalMs ?? 30000) < 5000) {
+    throw new Error(`Invalid automine interval: ${config.automineIntervalMs}. Must be at least 5000ms.`);
+  }
+
+  if (config.automine && config.minerAddress && !/^[0-9a-f]{40}$/.test(config.minerAddress)) {
+    throw new Error(`Invalid miner address: ${config.minerAddress}. Must be 40-char hex.`);
+  }
+
   for (const peer of config.peerUrls) {
     try {
       new URL(peer);
@@ -107,6 +118,9 @@ export function loadConfig(): NodeConfig {
     enableWs: process.env.ENABLE_WS !== "false",
     enableRateLimit: process.env.ENABLE_RATE_LIMIT !== "false",
     corsOrigins: parseCorsOrigins(process.env.CORS_ORIGINS),
+    automine: process.env.AUTOMINE === "true",
+    automineIntervalMs: Number(process.env.AUTOMINE_INTERVAL_MS ?? 30000),
+    minerAddress: process.env.MINER_ADDRESS ?? GENESIS_ALLOCATION.address,
   };
 
   try {

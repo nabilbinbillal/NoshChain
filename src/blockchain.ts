@@ -1,4 +1,5 @@
 import type { Block, Chain, Transaction } from "./types.js";
+import { existsSync, unlinkSync } from "node:fs";
 import {
   GENESIS_ALLOCATION,
   GENESIS_SENDER,
@@ -71,8 +72,17 @@ export class Blockchain {
     this.config = config;
     this.mempool = new Mempool();
     this.peers = new Set(config.peerUrls);
+    // Clean up any legacy JSON fallback files that might still exist
+    const legacyJson = `${config.dataFile}.json`;
+    if (existsSync(legacyJson)) {
+      try {
+        unlinkSync(legacyJson);
+        this.logger.info('Removed legacy JSON fallback file', { file: legacyJson });
+      } catch (e) {
+        this.logger.error('Failed to remove legacy JSON file', { error: e, file: legacyJson });
+      }
+    }
     this.storage = new DatabaseStorage(config.dataFile);
-
     const persisted = this.storage.loadState();
     if (persisted && persisted.chain.length > 0) {
       const validation = validateChainWithDetails(

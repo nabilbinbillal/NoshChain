@@ -21,6 +21,7 @@ import { transactionHash } from "./transaction-id.js";
 import { createHash } from "node:crypto";
 import { getAllTokens, getToken, getTokenBalance, validateTokenMetadata, tokenIdFromCreation } from "../tokens.js";
 import { NoshWallet } from "../wallet.js";
+import { validateAddress } from "../validation.js";
 
 export type ApiContext = {
   config: NodeConfig;

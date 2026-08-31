@@ -58,7 +58,7 @@ async function gracefulShutdown(exitCode: number) {
   logger.info("Shutting down gracefully...");
 
   try {
-    // Stop accepting new connections
+    stopAutomine();
     server.close(() => {
       logger.info("HTTP server closed");
     });
@@ -85,6 +85,30 @@ async function gracefulShutdown(exitCode: number) {
   }, 10000);
 }
 
+let automineTimer: NodeJS.Timeout | undefined;
+
+function startAutomine() {
+  if (!config.automine) return;
+  const interval = config.automineIntervalMs ?? 30000;
+  const miner = config.minerAddress ?? "27982254690517c92abd56fd0f4871f60aee92f6";
+  logger.info(`Automine enabled — interval ${interval}ms, miner ${miner}`);
+  automineTimer = setInterval(() => {
+    if (isShuttingDown) return;
+    try {
+      const block = blockchain.mineBlock(miner);
+      logger.info(`Automined block #${block.index} ${block.hash.slice(0,12)}… txs=${block.transactions.length}`);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (!msg.includes("Operation in progress")) logger.warn(`Automine failed: ${msg}`);
+    }
+  }, interval);
+  if (automineTimer.unref) automineTimer.unref();
+}
+
+function stopAutomine() {
+  if (automineTimer) clearInterval(automineTimer);
+}
+
 server.listen(config.port, () => {
   const latest = blockchain.getLatestBlock();
   console.log(`
@@ -101,6 +125,7 @@ Blocks:  ${blockchain.getChain().length}
 Reward:  ${formatNosh(calculateBlockReward(blockchain.getChain().length))} NOSH
 Difficulty: ${latest.difficulty}
 Consensus: proof-of-work
+Automine: ${config.automine ? `ON every ${(config.automineIntervalMs ?? 30000)/1000}s → ${(config.minerAddress ?? "").slice(0,10)}…` : "OFF (set AUTOMINE=true)"}
 
 Endpoints:
 GET  /
@@ -121,4 +146,5 @@ GET  /sync
 Blockchain:
 ${config.dataFile}
 `);
+  startAutomine();
 });
