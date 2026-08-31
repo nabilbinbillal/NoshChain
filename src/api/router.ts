@@ -221,12 +221,13 @@ export async function handleApiRequest(
         0,
         chain.length
       );
+      const reversed = [...chain].reverse();
 
       sendSuccess(res, 200, {
         total: chain.length,
         limit,
         offset,
-        blocks: chain.slice(offset, offset + limit).map(summarizeBlock),
+        blocks: reversed.slice(offset, offset + limit).map(summarizeBlock),
       });
       return true;
     }

@@ -665,7 +665,7 @@ async function loadDashboard() {
     const bl = await api('/blocks?limit=15&offset=0');
     if (bl && bl.success && bl.data?.blocks?.length) {
       updateActivityChart(bl.data.blocks);
-      const latest = [...bl.data.blocks].reverse().slice(0, 5);
+      const latest = bl.data.blocks.slice(0, 5);
       document.getElementById('dashBlocks').innerHTML = latest.map(b => `
         <div class="row" onclick="showBlockDetails(${b.height}, '${b.hash}')" style="cursor:pointer">
           <div>
@@ -683,11 +683,9 @@ async function loadDashboard() {
 
 async function loadBlocks() {
   const el = document.getElementById('blocksList');
-  el.innerHTML = '<div style="padding:24px;text-align:center"><span class="spinner"></span></div>';
-  const r = await api('/blocks?limit=30&offset=0');
+  const r = await api('/blocks?limit=50&offset=0');
   if (r && r.success && r.data?.blocks?.length) {
-    const latest = [...r.data.blocks].reverse();
-    el.innerHTML = latest.map(b => `
+    el.innerHTML = r.data.blocks.map(b => `
       <div class="block-card" onclick="showBlockDetails(${b.height}, '${b.hash}')">
         <div class="block-card-header">
           <div class="block-number">Block #${b.height}</div>
@@ -1161,7 +1159,13 @@ async function executeApiTest(path, method, outputId) {
 document.addEventListener('DOMContentLoaded', () => {
   loadDashboard();
   renderSavedWallets();
-  setInterval(loadDashboard, 2500);
+  setInterval(() => {
+    loadDashboard();
+    const blocksActive = document.getElementById('p-blocks')?.classList.contains('active');
+    const txsActive = document.getElementById('p-txs')?.classList.contains('active');
+    if (blocksActive) loadBlocks();
+    if (txsActive) loadTxs();
+  }, 2500);
 });
 </script>
 </body>
