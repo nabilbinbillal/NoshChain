@@ -89,13 +89,13 @@ let automineTimer: NodeJS.Timeout | undefined;
 
 function startAutomine() {
   if (!config.automine) return;
-  const interval = config.automineIntervalMs ?? 30000;
+  const interval = config.automineIntervalMs ?? 60000;
   const miner = config.minerAddress ?? "27982254690517c92abd56fd0f4871f60aee92f6";
-  logger.info(`Automine enabled — interval ${interval}ms, miner ${miner}`);
-  automineTimer = setInterval(() => {
+  logger.info(`Automine enabled — interval ${interval}ms, miner ${miner} (non-blocking)`);
+  automineTimer = setInterval(async () => {
     if (isShuttingDown) return;
     try {
-      const block = blockchain.mineBlock(miner);
+      const block = await blockchain.mineBlockAsync(miner);
       logger.info(`Automined block #${block.index} ${block.hash.slice(0,12)}… txs=${block.transactions.length}`);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);

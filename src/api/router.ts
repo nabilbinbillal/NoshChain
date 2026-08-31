@@ -256,7 +256,7 @@ export async function handleApiRequest(
         return true;
       }
 
-      const block = ctx.blockchain.mineBlock(body.miner);
+      const block = await ctx.blockchain.mineBlockAsync(body.miner);
       void ctx.p2p.broadcastBlock(block);
 
       sendSuccess(res, 201, {

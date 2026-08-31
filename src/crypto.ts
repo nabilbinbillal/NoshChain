@@ -130,7 +130,6 @@ export function mineBlockHeader(
   maxNonce = Number.MAX_SAFE_INTEGER
 ): { hash: string; powNonce: number } {
   let powNonce = 0;
-
   while (powNonce <= maxNonce) {
     const candidate = blockHash({ ...block, powNonce });
     if (meetsDifficulty(candidate, block.difficulty)) {
@@ -138,7 +137,24 @@ export function mineBlockHeader(
     }
     powNonce++;
   }
+  throw new Error("Failed to find valid proof-of-work nonce");
+}
 
+export async function mineBlockHeaderAsync(
+  block: Omit<Block, "hash">,
+  maxNonce = Number.MAX_SAFE_INTEGER
+): Promise<{ hash: string; powNonce: number }> {
+  let powNonce = 0;
+  while (powNonce <= maxNonce) {
+    const candidate = blockHash({ ...block, powNonce });
+    if (meetsDifficulty(candidate, block.difficulty)) {
+      return { hash: candidate, powNonce };
+    }
+    powNonce++;
+    if (powNonce % 1000 === 0) {
+      await new Promise<void>((resolve) => setImmediate(resolve));
+    }
+  }
   throw new Error("Failed to find valid proof-of-work nonce");
 }
 

@@ -49,9 +49,8 @@ async function startDaemon() {
   // Helper for random int
   const randInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-  // 1. Transaction Generation Cycle with randomized schedules & amounts
   const scheduleNextTx = () => {
-    const delay = randInt(4000, 10000); // 4 to 10 seconds random delay
+    const delay = randInt(10000, 20000);
     setTimeout(async () => {
       await generateRandomTx();
       scheduleNextTx();
@@ -117,10 +116,8 @@ async function startDaemon() {
     }
   };
 
-  // 2. Block Mining Cycle with adaptive random intervals
   const scheduleNextMining = () => {
-    // Varied mining speed (between 16s and 42s) to naturally trigger PoW difficulty adjustments
-    const delay = randInt(16000, 42000);
+    const delay = randInt(60000, 120000);
     setTimeout(async () => {
       await executeMining();
       scheduleNextMining();
