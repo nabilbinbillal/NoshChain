@@ -61,49 +61,44 @@ export class Mempool {
     const balances: BalanceMap = { ...calculateBalances(chain) };
     const nonces: NonceMap = { ...calculateNonces(chain) };
     const usedKeys = new Set<string>();
-
-    const sorted = [...this.transactions].sort((a, b) => {
-      const feeDiff = BigInt(b.fee) - BigInt(a.fee);
-      if (feeDiff > 0n) return 1;
-      if (feeDiff < 0n) return -1;
-      return a.nonce - b.nonce;
-    });
-
-    for (const tx of sorted) {
-      const key = transactionKey(tx);
-      if (usedKeys.has(key)) {
-        continue;
-      }
-
-      const expectedNonce = nonces[tx.from] ?? 0;
-      if (tx.nonce !== expectedNonce) {
-        continue;
-      }
-
-      const cost = transactionCost(tx);
-      if ((balances[tx.from] ?? 0n) < cost) {
-        continue;
-      }
-
-      selected.push(tx);
-      usedKeys.add(key);
-
-      // Only native NOSH transfers change the native balance of the
-      // recipient. Token amounts belong to token state, not NOSH state.
-      balances[tx.from] = (balances[tx.from] ?? 0n) - cost;
-
-      if (!isTokenTransaction(tx)) {
-        balances[tx.to] =
-          (balances[tx.to] ?? 0n) + BigInt(tx.amount);
-      }
-
-      nonces[tx.from] = expectedNonce + 1;
-
-      if (selected.length >= maxTransactions) {
-        break;
+    const remaining = [...this.transactions];
+    let progress = true;
+    while (progress && selected.length < maxTransactions && remaining.length > 0) {
+      progress = false;
+      remaining.sort((a, b) => {
+        const feeDiff = BigInt(b.fee) - BigInt(a.fee);
+        if (feeDiff !== 0n) return feeDiff > 0n ? 1 : -1;
+        return a.nonce - b.nonce;
+      });
+      for (let i = 0; i < remaining.length; i++) {
+        const tx = remaining[i]!;
+        const key = transactionKey(tx);
+        if (usedKeys.has(key)) {
+          remaining.splice(i, 1);
+          i--;
+          continue;
+        }
+        const expectedNonce = nonces[tx.from] ?? 0;
+        if (tx.nonce !== expectedNonce) continue;
+        const cost = transactionCost(tx);
+        if ((balances[tx.from] ?? 0n) < cost) {
+          remaining.splice(i, 1);
+          i--;
+          continue;
+        }
+        selected.push(tx);
+        usedKeys.add(key);
+        balances[tx.from] = (balances[tx.from] ?? 0n) - cost;
+        if (!isTokenTransaction(tx)) {
+          balances[tx.to] = (balances[tx.to] ?? 0n) + BigInt(tx.amount);
+        }
+        nonces[tx.from] = expectedNonce + 1;
+        remaining.splice(i, 1);
+        i--;
+        progress = true;
+        if (selected.length >= maxTransactions) break;
       }
     }
-
     return selected;
   }
 
