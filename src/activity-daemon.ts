@@ -20,28 +20,52 @@ async function fetchJson(path: string, options: RequestInit = {}) {
 }
 
 async function startDaemon() {
-  logger.info("Starting NoshChain Activity Daemon", { nodeUrl: NODE_URL });
+  logger.info("Starting NoshChain Realtime Randomized Activity Daemon", { nodeUrl: NODE_URL });
 
-  // Initialize 3 active test wallets
+  // Initialize diverse actor wallets & miners
   const alice = new NoshWallet();
   const bob = new NoshWallet();
   const charlie = new NoshWallet();
+  const diana = new NoshWallet();
+  const eric = new NoshWallet();
+  const fiona = new NoshWallet();
 
-  const wallets = [alice, bob, charlie];
-  logger.info("Active daemon wallets initialized", {
-    alice: alice.address,
-    bob: bob.address,
-    charlie: charlie.address,
+  const wallets = [alice, bob, charlie, diana, eric, fiona];
+  
+  // Diverse miner addresses
+  const miners = [
+    new NoshWallet().address,
+    new NoshWallet().address,
+    new NoshWallet().address,
+    alice.address,
+    bob.address
+  ];
+
+  logger.info("Randomized activity actors initialized", {
+    actorsCount: wallets.length,
+    minersCount: miners.length
   });
 
-  let txCounter = 0;
+  // Helper for random int
+  const randInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-  // 1. Transaction Generation Cycle (runs every 10 seconds)
-  const generateTxCycle = async () => {
+  // 1. Transaction Generation Cycle with randomized schedules & amounts
+  const scheduleNextTx = () => {
+    const delay = randInt(4000, 10000); // 4 to 10 seconds random delay
+    setTimeout(async () => {
+      await generateRandomTx();
+      scheduleNextTx();
+    }, delay);
+  };
+
+  const generateRandomTx = async () => {
     try {
-      txCounter++;
-      const senderIdx = txCounter % wallets.length;
-      const recipientIdx = (txCounter + 1) % wallets.length;
+      const senderIdx = randInt(0, wallets.length - 1);
+      let recipientIdx = randInt(0, wallets.length - 1);
+      while (recipientIdx === senderIdx) {
+        recipientIdx = randInt(0, wallets.length - 1);
+      }
+
       const sender = wallets[senderIdx]!;
       const recipient = wallets[recipientIdx]!;
 
@@ -50,9 +74,9 @@ async function startDaemon() {
       const balance = BigInt(accRes?.data?.balance || "0");
       const nonce = accRes?.data?.nonce || 0;
 
-      // If sender has low balance, fund sender by mining a block
-      if (balance < WEI_PER_NOSH) {
-        logger.info("Funding wallet...", { miner: sender.address });
+      // If sender needs funds, mine a block to reward sender
+      if (balance < WEI_PER_NOSH / 2n) {
+        logger.info("Funding actor wallet...", { miner: sender.address.slice(0, 10) });
         await fetchJson("/mine", {
           method: "POST",
           body: JSON.stringify({ miner: sender.address }),
@@ -60,13 +84,18 @@ async function startDaemon() {
         return;
       }
 
-      // Varying transaction amounts from 0.05 to 0.5 NOSH
-      const amount = (WEI_PER_NOSH / 20n) * BigInt((txCounter % 10) + 1);
+      // Generate natural, randomized amounts (e.g. 0.0125 NOSH to 2.8500 NOSH)
+      const randomFrac = (Math.random() * 2.5 + 0.01).toFixed(4);
+      const amountWei = BigInt(Math.floor(parseFloat(randomFrac) * 1e18));
+      
+      // Randomized fee (0.0010 to 0.0018 NOSH)
+      const feeWei = MIN_FEE + BigInt(randInt(10_000, 800_000)) * (10n ** 9n);
+
       const tx = sender.sign(
         sender.address,
         recipient.address,
-        amount.toString(),
-        MIN_FEE.toString(),
+        amountWei.toString(),
+        feeWei.toString(),
         nonce
       );
 
@@ -76,41 +105,51 @@ async function startDaemon() {
       });
 
       if (res && res.success) {
-        logger.info("Realtime transaction queued in mempool", {
+        logger.info("Realtime transaction submitted", {
           hash: res.data?.hash?.slice(0, 16),
           from: sender.address.slice(0, 8),
           to: recipient.address.slice(0, 8),
-          amount: `${(amount / (10n ** 15n)).toString()} mNOSH`,
+          amount: `${randomFrac} NOSH`,
         });
       }
     } catch (err) {
-      logger.error("Error generating transaction", { error: err });
+      logger.error("Error generating random transaction", { error: err });
     }
   };
 
-  // 2. Block Mining Cycle (runs every 38 seconds)
-  const miningCycle = async () => {
+  // 2. Block Mining Cycle with adaptive random intervals
+  const scheduleNextMining = () => {
+    // Varied mining speed (between 16s and 42s) to naturally trigger PoW difficulty adjustments
+    const delay = randInt(16000, 42000);
+    setTimeout(async () => {
+      await executeMining();
+      scheduleNextMining();
+    }, delay);
+  };
+
+  const executeMining = async () => {
     try {
       const status = await fetchJson("/api/status");
       const mempoolSize = status?.data?.mempoolSize || 0;
 
-      // Select random miner
-      const miner = wallets[Math.floor(Math.random() * wallets.length)]!;
-      logger.info(`Mining block with ${mempoolSize} pending mempool transactions...`, {
-        miner: miner.address.slice(0, 10),
+      // Select random miner pool / address
+      const minerAddress = miners[randInt(0, miners.length - 1)]!;
+
+      logger.info(`Mining block with ${mempoolSize} pending transactions...`, {
+        miner: minerAddress.slice(0, 10),
       });
 
       const mineRes = await fetchJson("/mine", {
         method: "POST",
-        body: JSON.stringify({ miner: miner.address }),
+        body: JSON.stringify({ miner: minerAddress }),
       });
 
       if (mineRes && mineRes.block) {
         logger.info("✓ New Block Mined!", {
           height: mineRes.block.index,
           hash: mineRes.block.hash.slice(0, 16),
-          txCount: mineRes.block.transactions.length,
           difficulty: mineRes.block.difficulty,
+          txCount: mineRes.block.transactions.length,
         });
       }
     } catch (err) {
@@ -118,20 +157,15 @@ async function startDaemon() {
     }
   };
 
-  // Fund initial wallet
+  // Initial funding
   await fetchJson("/mine", {
     method: "POST",
     body: JSON.stringify({ miner: alice.address }),
   });
 
-  // Run first tx after 3s
-  setTimeout(generateTxCycle, 3000);
-
-  // Interval for transaction generation (every 10s)
-  setInterval(generateTxCycle, 10_000);
-
-  // Interval for block mining (every 38s)
-  setInterval(miningCycle, 38_000);
+  // Start randomized transaction and mining loops
+  setTimeout(scheduleNextTx, 2000);
+  setTimeout(scheduleNextMining, 18000);
 }
 
 startDaemon();
