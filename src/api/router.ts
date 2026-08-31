@@ -245,6 +245,27 @@ export async function handleApiRequest(
       return true;
     }
 
+    if (req.method === "POST" && (pathname === "/api/mine" || pathname === "/api/blocks/mine")) {
+      const body = (await readBody(req, ctx.config.maxBodySize)) as {
+        miner?: unknown;
+      };
+
+      if (typeof body.miner !== "string" || !validateAddress(body.miner)) {
+        sendError(res, 400, "INVALID_MINER", "Valid miner address required");
+        return true;
+      }
+
+      const block = ctx.blockchain.mineBlock(body.miner);
+      void ctx.p2p.broadcastBlock(block);
+
+      sendSuccess(res, 201, {
+        message: "Block mined successfully",
+        reward: calculateBlockReward(block.index).toString(),
+        block,
+      });
+      return true;
+    }
+
     if (req.method === "GET" && pathname.startsWith("/api/blocks/hash/")) {
       const hash = pathname.slice("/api/blocks/hash/".length);
       if (!/^[0-9a-f]{64}$/.test(hash)) {
