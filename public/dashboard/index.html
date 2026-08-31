@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>NoshChain Explorer — Blockchain & Node Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Rubik+80s+Fade&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -28,9 +30,52 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 /* Topbar */
 .topbar{position:sticky;top:0;z-index:50;background:rgba(11,14,20,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between}
-.logo{display:flex;align-items:center;gap:12px;font-weight:800;font-size:18px;letter-spacing:-.5px}
-.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#0B0E14;box-shadow:0 4px 16px var(--gold-glow);transition:all 0.3s ease;cursor:pointer}
-.logo-icon:hover{transform:scale(1.08) rotate(5deg)}
+.logo{display:flex;align-items:center;gap:12px;font-weight:800;font-size:18px;letter-spacing:-.5px;text-decoration:none;color:var(--text)}
+.logo-icon{
+  position:relative;
+  width:44px;height:44px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#1a1f2e,#0B0E14);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  transition:transform 0.3s ease;
+  flex-shrink:0;
+}
+.logo-icon::before{
+  content:'';
+  position:absolute;
+  inset:-2px;
+  border-radius:50%;
+  background:conic-gradient(var(--gold),var(--gold2),#b8860b,var(--gold));
+  z-index:-1;
+  animation:spin-ring 4s linear infinite;
+}
+.logo-icon::after{
+  content:'';
+  position:absolute;
+  inset:-2px;
+  border-radius:50%;
+  background:conic-gradient(var(--gold),var(--gold2),#b8860b,var(--gold));
+  z-index:-2;
+  filter:blur(6px);
+  opacity:0.6;
+  animation:spin-ring 4s linear infinite;
+}
+.logo-n{
+  font-family:'Rubik 80s Fade',sans-serif;
+  font-size:22px;
+  line-height:1;
+  background:linear-gradient(180deg,var(--gold2) 0%,var(--gold) 100%);
+  background-clip:text;
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  position:relative;
+  z-index:1;
+  letter-spacing:0;
+}
+.logo-icon:hover{transform:scale(1.1)}
+@keyframes spin-ring{to{transform:rotate(360deg)}}
+
 
 .nav{display:flex;gap:4px;background:var(--card);padding:4px;border-radius:10px;border:1px solid var(--border)}
 .nav button{background:transparent;border:0;color:var(--muted);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s ease}
@@ -140,7 +185,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <body>
 
 <div class="topbar">
-  <div class="logo"><div class="logo-icon">◆</div> NoshChain</div>
+  <div class="logo"><div class="logo-icon"><span class="logo-n">N</span></div> NoshChain</div>
   <div class="nav" id="nav">
     <button class="active" data-p="dashboard">Dashboard</button>
     <button data-p="blocks">Blocks</button>
@@ -508,7 +553,8 @@ async function loadDashboard() {
 
     const bl = await api('/blocks?limit=5&offset=0');
     if (bl && bl.success && bl.data?.blocks?.length) {
-      document.getElementById('dashBlocks').innerHTML = bl.data.blocks.map(b => `
+      const latest = [...bl.data.blocks].reverse();
+      document.getElementById('dashBlocks').innerHTML = latest.map(b => `
         <div class="row" onclick="showBlockDetails(${b.height}, '${b.hash}')" style="cursor:pointer">
           <div>
             <b>#${b.height}</b>
@@ -528,7 +574,8 @@ async function loadBlocks() {
   el.innerHTML = '<div style="padding:24px;text-align:center"><span class="spinner"></span></div>';
   const r = await api('/blocks?limit=30&offset=0');
   if (r && r.success && r.data?.blocks?.length) {
-    el.innerHTML = r.data.blocks.map(b => `
+    const latest = [...r.data.blocks].reverse();
+    el.innerHTML = latest.map(b => `
       <div class="block-card" onclick="showBlockDetails(${b.height}, '${b.hash}')">
         <div class="block-card-header">
           <div class="block-number">Block #${b.height}</div>
