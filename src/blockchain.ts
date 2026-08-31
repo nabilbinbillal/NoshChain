@@ -81,23 +81,24 @@ export class Blockchain {
         config.initialDifficulty
       );
       if (!validation.valid) {
-        this.logger.error("Stored blockchain failed validation", {
+        this.logger.warn("Stored blockchain failed validation — resetting to genesis", {
           reason: validation.reason,
           errorBlockIndex: validation.errorBlockIndex,
           initialDifficulty: config.initialDifficulty,
           chainLength: persisted.chain.length,
         });
-        throw new Error(
-          `Stored blockchain failed validation: ${validation.reason ?? "Unknown error"}`
-        );
+        this.chain = [createGenesisBlock()];
+        this.persist();
+        this.logger.info("Fresh genesis block created after reset");
+      } else {
+        this.chain = persisted.chain;
+        this.mempool.load(persisted.mempool);
+        this.mempool.sanitize(this.chain);
+        for (const peer of persisted.peers) {
+          this.peers.add(peer);
+        }
+        this.logger.info("Blockchain loaded from database", { blocks: this.chain.length });
       }
-      this.chain = persisted.chain;
-      this.mempool.load(persisted.mempool);
-      this.mempool.sanitize(this.chain);
-      for (const peer of persisted.peers) {
-        this.peers.add(peer);
-      }
-      this.logger.info("Blockchain loaded from database", { blocks: this.chain.length });
     } else {
       this.chain = [createGenesisBlock()];
       this.persist();

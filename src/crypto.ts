@@ -167,13 +167,12 @@ export function calculateExpectedDifficulty(
   }
 
   if (blockIndex === 1) {
-    return Math.min(3, initialDifficulty);
+    return initialDifficulty;
   }
 
   if (blockIndex % adjustmentInterval !== 0) {
     const previous = chain[blockIndex - 1];
-    const prevDiff = previous?.difficulty ?? initialDifficulty;
-    return Math.min(3, Math.max(1, prevDiff));
+    return previous?.difficulty ?? initialDifficulty;
   }
 
   const windowStart = blockIndex - adjustmentInterval;
@@ -181,7 +180,7 @@ export function calculateExpectedDifficulty(
   const endBlock = chain[blockIndex - 1];
 
   if (!startBlock || !endBlock) {
-    return Math.min(3, initialDifficulty);
+    return initialDifficulty;
   }
 
   const elapsed = endBlock.timestamp - startBlock.timestamp;
@@ -195,7 +194,7 @@ export function calculateExpectedDifficulty(
     difficulty = Math.max(1, difficulty - 1);
   }
 
-  return Math.min(3, Math.max(1, difficulty));
+  return difficulty;
 }
 
 export function calculateTotalMiningSupply(): bigint {
