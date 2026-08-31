@@ -596,7 +596,7 @@ const PAGE_ROUTES = {
   'wallets': { path: '/wallets', hash: '#wallets', title: 'Wallets | NoshChain Explorer' },
   'tokens': { path: '/tokens', hash: '#tokens', title: 'Tokens | NoshChain Explorer' },
   'network': { path: '/network', hash: '#network', title: 'Network Stats | NoshChain Explorer' },
-  'api': { path: '/api-docs', hash: '#api-docs', title: 'API Reference | NoshChain Explorer' }
+  'api': { path: '/docs', hash: '#docs', title: 'API Docs | NoshChain Explorer' }
 };
 
 function showPage(p, updateUrl = true) {
@@ -637,7 +637,7 @@ function handleRoute() {
     showPage('tokens', false);
   } else if (path === '/network' || hash === 'network') {
     showPage('network', false);
-  } else if (path === '/api-docs' || path === '/api-ref' || hash === 'api' || hash === 'api-docs') {
+  } else if (path === '/docs' || path === '/api-docs' || path === '/api-ref' || hash === 'docs' || hash === 'api' || hash === 'api-docs') {
     showPage('api', false);
   } else if (path.startsWith('/block/') || hash.startsWith('block/')) {
     const id = path.startsWith('/block/') ? path.split('/block/')[1] : hash.split('block/')[1];
