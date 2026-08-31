@@ -48,10 +48,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
+      - name: Run unit tests
         run: |
           rm -rf data && mkdir -p data
           node --import tsx/esm --test --test-concurrency=1 src/tests/validation.test.ts src/tests/pow.test.ts src/tests/security.test.ts
+
+      - name: Run e2e tests
+        run: |
+          rm -rf data && mkdir -p data
+          node --import tsx/esm --test --test-concurrency=1 src/tests/e2e.test.ts
 
   deploy:
     needs: test
