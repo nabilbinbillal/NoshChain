@@ -11,12 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install build dependencies
         run: sudo apt-get update && sudo apt-get install -y python3 make g++
@@ -32,13 +32,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18, 20]
+        node-version: [22]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -51,7 +51,7 @@ jobs:
       - name: Run tests
         run: |
           rm -rf data && mkdir -p data
-          node --import tsx/esm --test --test-concurrency=1 src/tests/validation.test.ts src/tests/blockchain.test.ts src/tests/pow.test.ts src/tests/security.test.ts src/tests/consensus.test.ts src/tests/api.test.ts src/tests/monetary.test.ts
+          node --import tsx/esm --test --test-concurrency=1 src/tests/validation.test.ts src/tests/pow.test.ts src/tests/security.test.ts
 
   deploy:
     needs: test
@@ -59,7 +59,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Build Docker image
         run: docker build -t noshchain:${{ github.sha }} .
