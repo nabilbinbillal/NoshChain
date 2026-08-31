@@ -73,13 +73,19 @@ async function startDaemon() {
       const balance = BigInt(accRes?.data?.balance || "0");
       const nonce = accRes?.data?.nonce || 0;
 
-      // If sender needs funds, mine a block to reward sender
       if (balance < WEI_PER_NOSH / 2n) {
         logger.info("Funding actor wallet...", { miner: sender.address.slice(0, 10) });
-        await fetchJson("/mine", {
+        const res = await fetchJson("/api/mine", {
           method: "POST",
           body: JSON.stringify({ miner: sender.address }),
         });
+        if (res && res.error && res.error.message && res.error.message.includes("Operation in progress")) {
+          await new Promise((r) => setTimeout(r, 5000));
+          await fetchJson("/api/mine", {
+            method: "POST",
+            body: JSON.stringify({ miner: sender.address }),
+          });
+        }
         return;
       }
 
@@ -136,7 +142,7 @@ async function startDaemon() {
         miner: minerAddress.slice(0, 10),
       });
 
-      const mineRes = await fetchJson("/mine", {
+      const mineRes = await fetchJson("/api/mine", {
         method: "POST",
         body: JSON.stringify({ miner: minerAddress }),
       });
@@ -149,6 +155,11 @@ async function startDaemon() {
           txCount: mineRes.block.transactions.length,
         });
       } else if (mineRes && mineRes.error) {
+        if (mineRes.error.message && mineRes.error.message.includes("Operation in progress")) {
+          logger.info("Mining busy, retrying in 8s...");
+          setTimeout(executeMining, 8000);
+          return;
+        }
         logger.warn("Mining attempt failed", { error: mineRes.error });
       } else {
         logger.error("Unexpected mining response", { response: mineRes });
@@ -158,11 +169,23 @@ async function startDaemon() {
     }
   };
 
-  // Initial funding
-  await fetchJson("/mine", {
-    method: "POST",
-    body: JSON.stringify({ miner: alice.address }),
-  });
+  // Initial funding - fund all actors sequentially with retry
+  for (const w of wallets) {
+    let retries = 3;
+    while (retries-- > 0) {
+        const res = await fetchJson("/api/mine", {
+          method: "POST",
+          body: JSON.stringify({ miner: w.address }),
+        });
+      if (res && res.block) break;
+      if (res && res.error && res.error.message && res.error.message.includes("Operation in progress")) {
+        await new Promise((r) => setTimeout(r, 8000));
+        continue;
+      }
+      break;
+    }
+    await new Promise((r) => setTimeout(r, 2000));
+  }
 
   // Start randomized transaction and mining loops
   setTimeout(scheduleNextTx, 2000);
