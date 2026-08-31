@@ -47,6 +47,12 @@ export class NoshWallet {
       .toString();
   }
 
+  getPrivateKeyPem(): string {
+    return this.privateKey
+      .export({ type: "pkcs8", format: "pem" })
+      .toString();
+  }
+
   static loadFromFile(path: string): NoshWallet {
     if (!existsSync(path)) {
       throw new Error(`Wallet file not found: ${path}`);

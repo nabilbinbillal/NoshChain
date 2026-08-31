@@ -378,7 +378,21 @@ test("API responses never expose private keys", async () => {
       MIN_FEE.toString(),
       0
     );
-  const posted = await apiPost(baseUrl, "/api/transactions", tx);
+    const posted = await apiPost(baseUrl, "/api/transactions", tx);
     assert.equal(containsPrivateKeyMaterial(posted.body), false);
+  });
+});
+
+test("POST /api/wallet/create generates valid secp256k1 keypair", async () => {
+  await withApiServer(async (baseUrl) => {
+    const { response, body } = await apiPost(baseUrl, "/api/wallet/create", {
+      name: "testwallet",
+    });
+    assert.equal(response.status, 201);
+    assert.equal(body.success, true);
+    const wallet = body.data?.wallet as { address: string; publicKey: string; privateKey: string };
+    assert.ok(wallet.address && wallet.address.length === 40);
+    assert.ok(wallet.publicKey.includes("BEGIN PUBLIC KEY"));
+    assert.ok(wallet.privateKey.includes("BEGIN PRIVATE KEY"));
   });
 });

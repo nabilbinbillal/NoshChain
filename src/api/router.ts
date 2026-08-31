@@ -20,6 +20,7 @@ import { sendError, sendSuccess } from "./responses.js";
 import { transactionHash } from "./transaction-id.js";
 import { createHash } from "node:crypto";
 import { getAllTokens, getToken, getTokenBalance, validateTokenMetadata, tokenIdFromCreation } from "../tokens.js";
+import { NoshWallet } from "../wallet.js";
 
 export type ApiContext = {
   config: NodeConfig;
@@ -543,6 +544,39 @@ export async function handleApiRequest(
     const invalidAddressMatch = url.pathname.match(/^\/api\/address\/([^/]+)/);
     if (req.method === "GET" && invalidAddressMatch) {
       sendError(res, 400, "INVALID_ADDRESS", "Invalid address format");
+      return true;
+    }
+
+    /*
+     * ============================================================
+     * WALLET API
+     * ============================================================
+     */
+
+    if (
+      req.method === "POST" &&
+      (url.pathname === "/api/wallet/create" || url.pathname === "/api/wallet/generate")
+    ) {
+      const body = (await readBody(req, ctx.config.maxBodySize)) as { name?: string };
+      const wallet = new NoshWallet();
+      let savedFile: string | null = null;
+
+      if (body.name && typeof body.name === "string" && /^[a-zA-Z0-9_-]{1,32}$/.test(body.name)) {
+        savedFile = wallet.save(body.name);
+      }
+
+      sendSuccess(res, 201, {
+        message: savedFile
+          ? `Wallet created and saved as ${savedFile}`
+          : "Secp256k1 keypair generated successfully",
+        wallet: {
+          name: body.name || "ephemeral",
+          address: wallet.address,
+          publicKey: wallet.publicKey,
+          privateKey: wallet.getPrivateKeyPem(),
+          savedFile,
+        },
+      });
       return true;
     }
 
