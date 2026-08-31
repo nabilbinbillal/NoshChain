@@ -290,6 +290,27 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         </div>
       </div>
     </div>
+
+    <div class="wallet-grid" style="margin-top:16px">
+      <div class="card">
+        <div class="card-head">📥 Import / Restore Wallet</div>
+        <div class="card-body" style="padding:18px">
+          <label style="font-size:12px;color:var(--muted);margin-bottom:6px;display:block">Upload Wallet JSON Backup</label>
+          <input type="file" id="wFileInput" accept=".json" class="input" style="padding:6px;margin-bottom:10px" onchange="importWalletFile(event)">
+          <div style="font-size:11px;color:var(--muted);text-align:center;margin:8px 0">— OR PASTE KEYS MANUALLY —</div>
+          <input id="wImportAddr" class="input mono" placeholder="Address (40-char hex)" style="margin-bottom:8px">
+          <textarea id="wImportPrivKey" class="input mono" placeholder="Private Key PEM (optional)" style="height:60px;resize:none;margin-bottom:8px"></textarea>
+          <button class="btn btn-ghost" style="width:100%" onclick="importWalletManual()">📥 Import Wallet to Browser</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">💼 Saved Browser Wallets <span class="badge badge-gold" id="browserWalletCount">0</span></div>
+        <div class="card-body" style="padding:18px" id="browserWalletsList">
+          <div style="color:var(--muted);font-size:13px;text-align:center;padding:12px">No wallets stored in browser local storage</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- TOKENS PAGE -->
@@ -636,29 +657,127 @@ async function generateWallet() {
   if (r && r.success && r.data?.wallet) {
     const w = r.data.wallet;
     document.getElementById('bAddrInput').value = w.address;
+    
+    // Auto-save to browser storage
+    saveWalletToBrowser(w.address, w.publicKey, w.privateKey, w.name);
+
     resEl.innerHTML = `
       <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:10px">
         <div style="font-weight:700;color:var(--green);margin-bottom:8px">✓ ${r.data.message}</div>
         <div style="margin-bottom:8px">
           <label style="font-size:11px;color:var(--muted);display:block">ADDRESS</label>
           <div class="mono" style="font-weight:700;color:var(--gold);word-break:break-all">${w.address}</div>
-          <button class="btn btn-ghost btn-sm" style="margin-top:4px" onclick="copyText('${w.address}')">Copy Address</button>
+          <div style="display:flex;gap:6px;margin-top:4px">
+            <button class="btn btn-ghost btn-sm" onclick="copyText('${w.address}')">Copy Address</button>
+            <button class="btn btn-ghost btn-sm" onclick="downloadWalletFile('${w.address}', '${encodeURIComponent(w.publicKey)}', '${encodeURIComponent(w.privateKey)}', '${w.name}')">💾 Download JSON Backup</button>
+          </div>
         </div>
         <div style="margin-bottom:8px">
           <label style="font-size:11px;color:var(--muted);display:block">PUBLIC KEY (PEM)</label>
-          <textarea class="input mono" style="font-size:10px;height:70px;resize:none" readonly>${w.publicKey}</textarea>
+          <textarea class="input mono" style="font-size:10px;height:65px;resize:none" readonly>${w.publicKey}</textarea>
         </div>
         <div>
           <label style="font-size:11px;color:var(--muted);display:block">PRIVATE KEY (PEM)</label>
-          <textarea class="input mono" style="font-size:10px;height:70px;resize:none" readonly>${w.privateKey}</textarea>
-          <button class="btn btn-ghost btn-sm" style="margin-top:4px" onclick="copyText('${encodeURIComponent(w.privateKey)}')">Copy Private Key</button>
+          <textarea class="input mono" style="font-size:10px;height:65px;resize:none" readonly>${w.privateKey}</textarea>
+          <button class="btn btn-ghost btn-sm" style="margin-top:4px" onclick="copyText(\`${w.privateKey.replace(/`/g, '\\`')}\`)">Copy Private Key</button>
         </div>
       </div>
     `;
-    showToast('✓ Wallet generated successfully!', 'success');
+    showToast('✓ Wallet generated & saved to browser!', 'success');
   } else {
     resEl.innerHTML = `<span style="color:var(--red)">Failed to generate wallet: ${r?.error?.message || 'Unknown error'}</span>`;
   }
+}
+
+function downloadWalletFile(address, pubEnc, privEnc, name) {
+  const publicKey = decodeURIComponent(pubEnc);
+  const privateKey = decodeURIComponent(privEnc);
+  const data = JSON.stringify({ address, publicKey, privateKey }, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (name && name !== 'ephemeral' ? name : 'nosh-wallet-' + address.slice(0, 8)) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('✓ Wallet backup downloaded!', 'success');
+}
+
+function saveWalletToBrowser(address, publicKey, privateKey, name) {
+  let wallets = JSON.parse(localStorage.getItem('nosh_wallets') || '[]');
+  if (!wallets.some(w => w.address === address)) {
+    wallets.push({ name: name || 'Wallet ' + (wallets.length + 1), address, publicKey, privateKey, date: Date.now() });
+    localStorage.setItem('nosh_wallets', JSON.stringify(wallets));
+    renderSavedWallets();
+  }
+}
+
+function renderSavedWallets() {
+  const container = document.getElementById('browserWalletsList');
+  const countBadge = document.getElementById('browserWalletCount');
+  if (!container) return;
+
+  const wallets = JSON.parse(localStorage.getItem('nosh_wallets') || '[]');
+  countBadge.textContent = wallets.length;
+
+  if (!wallets.length) {
+    container.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:12px">No wallets stored in browser local storage</div>';
+    return;
+  }
+
+  container.innerHTML = wallets.map(w => `
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <b style="font-size:13px;color:var(--gold)">${w.name}</b>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red);padding:2px 6px" onclick="removeWalletFromBrowser('${w.address}')">🗑️ Remove</button>
+      </div>
+      <div class="mono" style="font-size:11.5px;color:var(--text);word-break:break-all;margin-bottom:6px">${w.address}</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="copyText('${w.address}')">Copy Address</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('bAddrInput').value='${w.address}';showPage('wallets');checkBalance();">Check Balance</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function removeWalletFromBrowser(address) {
+  let wallets = JSON.parse(localStorage.getItem('nosh_wallets') || '[]');
+  wallets = wallets.filter(w => w.address !== address);
+  localStorage.setItem('nosh_wallets', JSON.stringify(wallets));
+  showToast('🗑️ Wallet removed from browser storage', 'info');
+  renderSavedWallets();
+}
+
+function importWalletFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.address) {
+        saveWalletToBrowser(data.address, data.publicKey || '', data.privateKey || '', file.name.replace('.json', ''));
+        document.getElementById('bAddrInput').value = data.address;
+        showToast('✓ Wallet imported from JSON file!', 'success');
+      } else {
+        showToast('Invalid wallet JSON file', 'error');
+      }
+    } catch {
+      showToast('Failed to parse wallet JSON file', 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function importWalletManual() {
+  const addr = document.getElementById('wImportAddr').value.trim();
+  const priv = document.getElementById('wImportPrivKey').value.trim();
+  if (!addr || !/^[0-9a-f]{40}$/i.test(addr)) {
+    return showToast('Please enter a valid 40-character address', 'error');
+  }
+  saveWalletToBrowser(addr, '', priv, 'Imported-' + addr.slice(0, 6));
+  document.getElementById('bAddrInput').value = addr;
+  showToast('✓ Wallet imported into browser storage!', 'success');
 }
 
 async function checkBalance() {
@@ -845,6 +964,7 @@ async function executeApiTest(path, method, outputId) {
 
 document.addEventListener('DOMContentLoaded', () => {
   loadDashboard();
+  renderSavedWallets();
   setInterval(loadDashboard, 15000);
 });
 </script>
