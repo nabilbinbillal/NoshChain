@@ -364,8 +364,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </div>
 
 <script>
-const API_BASE = window.location.origin + '/api';
-const WS_URL = (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws';
+const nodePort = (window.location.port === '3000' || !window.location.port) ? '3001' : window.location.port;
+const API_BASE = window.location.protocol + '//' + window.location.hostname + ':' + nodePort + '/api';
+const WS_URL = (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.hostname + ':' + nodePort + '/ws';
 
 let ws;
 function connectWS() {
