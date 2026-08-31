@@ -194,29 +194,28 @@ export class Blockchain {
   }
 
   async mineBlockAsync(miner: string): Promise<Block> {
-    if (this.operationInProgress) throw new Error("Operation in progress, please try again");
-    this.operationInProgress = true;
-    try {
-      const previous = this.getLatestBlock();
-      const blockHeight = previous.index + 1;
-      const reward = calculateBlockReward(blockHeight);
-      const difficulty = calculateExpectedDifficulty(
-        this.chain, blockHeight, this.config.initialDifficulty,
-        this.config.difficultyAdjustmentInterval, this.config.targetBlockTimeMs
-      );
-      const pendingTxs = this.mempool.selectForBlock(this.chain);
-      const rewardTx: Transaction = {
-        from: MINING_REWARD_SENDER, to: miner, amount: reward.toString(),
-        fee: "0", nonce: 0, signature: MINING_REWARD_SENDER,
-        publicKey: MINING_REWARD_SENDER, chainId: CHAIN_ID_STRING,
-      };
-      const blockWithoutHash: Omit<Block, "hash"> = {
-        index: blockHeight, timestamp: Date.now(),
-        transactions: [...pendingTxs, rewardTx],
-        previousHash: previous.hash, miner, difficulty, powNonce: 0, chainId: CHAIN_ID_STRING,
-      };
-      const { hash, powNonce } = await mineBlockHeaderAsync(blockWithoutHash);
-      const block: Block = { ...blockWithoutHash, hash, powNonce };
+    const previous = this.getLatestBlock();
+    const blockHeight = previous.index + 1;
+    const reward = calculateBlockReward(blockHeight);
+    const difficulty = calculateExpectedDifficulty(
+      this.chain, blockHeight, this.config.initialDifficulty,
+      this.config.difficultyAdjustmentInterval, this.config.targetBlockTimeMs
+    );
+    const pendingTxs = this.mempool.selectForBlock(this.chain);
+    const rewardTx: Transaction = {
+      from: MINING_REWARD_SENDER, to: miner, amount: reward.toString(),
+      fee: "0", nonce: 0, signature: MINING_REWARD_SENDER,
+      publicKey: MINING_REWARD_SENDER, chainId: CHAIN_ID_STRING,
+    };
+    const blockWithoutHash: Omit<Block, "hash"> = {
+      index: blockHeight, timestamp: Date.now(),
+      transactions: [...pendingTxs, rewardTx],
+      previousHash: previous.hash, miner, difficulty, powNonce: 0, chainId: CHAIN_ID_STRING,
+    };
+    const { hash, powNonce } = await mineBlockHeaderAsync(blockWithoutHash);
+    const block: Block = { ...blockWithoutHash, hash, powNonce };
+    return this.withLock(() => {
+      if (this.getLatestBlock().hash !== previous.hash) throw new Error("Chain changed during mining, retry");
       if (!validChain([...this.chain, block], Date.now(), this.config.initialDifficulty)) throw new Error("Mined block failed validation");
       this.chain.push(block);
       this.mempool.removeMany(pendingTxs);
@@ -225,7 +224,7 @@ export class Blockchain {
       this.emitEvent({ type: "block", data: block });
       this.emitEvent({ type: "chain", data: { height: blockHeight, hash: block.hash } });
       return block;
-    } finally { this.operationInProgress = false; }
+    });
   }
 
   mineBlock(miner: string): Block {
