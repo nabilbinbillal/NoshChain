@@ -131,8 +131,16 @@ export async function handleApiRequest(
   ctx: ApiContext
 ): Promise<boolean> {
   const url = new URL(req.url ?? "/", `http://localhost:${ctx.config.port}`);
-  if (!url.pathname.startsWith("/api/")) {
-    return false;
+  
+  let pathname = url.pathname;
+  while (pathname.startsWith("/api/api")) {
+    pathname = pathname.substring(4);
+  }
+  if (!pathname.startsWith("/api")) {
+    pathname = "/api" + (pathname.startsWith("/") ? pathname : "/" + pathname);
+  }
+  if (pathname.length > 4 && pathname.endsWith("/")) {
+    pathname = pathname.slice(0, -1);
   }
 
   try {
@@ -140,7 +148,7 @@ export async function handleApiRequest(
     const latest = ctx.blockchain.getLatestBlock();
     const mempool = ctx.blockchain.mempool.list();
 
-    if (req.method === "GET" && url.pathname === "/api/status") {
+    if (req.method === "GET" && pathname === "/api/status") {
       sendSuccess(res, 200, {
         name: "NoshChain",
         network: ctx.config.networkName,
@@ -157,7 +165,7 @@ export async function handleApiRequest(
       return true;
     }
 
-    if (req.method === "GET" && url.pathname === "/api/health") {
+    if (req.method === "GET" && pathname === "/api/health") {
       const uptime = process.uptime();
       const mem = process.memoryUsage();
       sendSuccess(res, 200, {
@@ -170,7 +178,7 @@ export async function handleApiRequest(
       return true;
     }
 
-    if (req.method === "GET" && url.pathname === "/api/metrics") {
+    if (req.method === "GET" && pathname === "/api/metrics") {
       const mem = process.memoryUsage();
       const cpu = process.cpuUsage();
       sendSuccess(res, 200, {
@@ -184,7 +192,7 @@ export async function handleApiRequest(
       return true;
     }
 
-    if (req.method === "GET" && url.pathname === "/api/network") {
+    if (req.method === "GET" && pathname === "/api/network") {
       sendSuccess(res, 200, {
         network: NETWORK_NAME,
         chainId: CHAIN_ID_STRING,
@@ -194,7 +202,7 @@ export async function handleApiRequest(
       return true;
     }
 
-    if (req.method === "GET" && url.pathname === "/api/stats") {
+    if (req.method === "GET" && pathname === "/api/stats") {
       const stats = getNetworkStats(chain);
       sendSuccess(res, 200, {
         ...stats,
@@ -206,7 +214,7 @@ export async function handleApiRequest(
       return true;
     }
 
-    if (req.method === "GET" && url.pathname === "/api/peers") {
+    if (req.method === "GET" && pathname === "/api/peers") {
       sendSuccess(res, 200, {
         peers: ctx.p2p.getPeerUrls(),
         count: ctx.p2p.getPeerUrls().length,
@@ -214,7 +222,7 @@ export async function handleApiRequest(
       return true;
     }
 
-    if (req.method === "GET" && url.pathname === "/api/blocks") {
+    if (req.method === "GET" && pathname === "/api/blocks") {
       const limit = parsePositiveInt(url.searchParams.get("limit"), 20, 100);
       const offset = parsePositiveInt(
         url.searchParams.get("offset"),
@@ -232,13 +240,13 @@ export async function handleApiRequest(
       return true;
     }
 
-    if (req.method === "GET" && url.pathname === "/api/blocks/latest") {
+    if (req.method === "GET" && pathname === "/api/blocks/latest") {
       sendSuccess(res, 200, latest);
       return true;
     }
 
-    if (req.method === "GET" && url.pathname.startsWith("/api/blocks/hash/")) {
-      const hash = url.pathname.slice("/api/blocks/hash/".length);
+    if (req.method === "GET" && pathname.startsWith("/api/blocks/hash/")) {
+      const hash = pathname.slice("/api/blocks/hash/".length);
       if (!/^[0-9a-f]{64}$/.test(hash)) {
         sendError(res, 400, "INVALID_HASH", "Invalid block hash format");
         return true;
@@ -254,7 +262,7 @@ export async function handleApiRequest(
       return true;
     }
 
-    const blockHeightMatch = url.pathname.match(/^\/api\/blocks\/(\d+)$/);
+    const blockHeightMatch = pathname.match(/^\/api\/blocks\/(\d+)$/);
     if (req.method === "GET" && blockHeightMatch) {
       const height = Number(blockHeightMatch[1]);
       const block = ctx.blockchain.getBlock(height);
@@ -267,7 +275,7 @@ export async function handleApiRequest(
       return true;
     }
 
-    if (req.method === "GET" && url.pathname === "/api/chain") {
+    if (req.method === "GET" && pathname === "/api/chain") {
       sendSuccess(res, 200, {
         blocks: chain.length,
         chainWork: getChainWork(chain).toString(),
@@ -285,7 +293,7 @@ export async function handleApiRequest(
      * ============================================================
      */
 
-    if (req.method === "GET" && url.pathname === "/api/tokens") {
+    if (req.method === "GET" && pathname === "/api/tokens") {
       sendSuccess(res, 200, {
         tokens: getAllTokens(chain),
         count: getAllTokens(chain).length,
@@ -293,7 +301,7 @@ export async function handleApiRequest(
       return true;
     }
 
-    const tokenMatch = url.pathname.match(
+    const tokenMatch = pathname.match(
       /^\/api\/tokens\/([0-9a-f]{64})$/
     );
 
@@ -310,7 +318,7 @@ export async function handleApiRequest(
       return true;
     }
 
-    const tokenBalanceMatch = url.pathname.match(
+    const tokenBalanceMatch = pathname.match(
       /^\/api\/tokens\/([0-9a-f]{64})\/balance\/([0-9a-f]{40})$/
     );
 
@@ -338,7 +346,7 @@ export async function handleApiRequest(
 
     const createTokenMatch =
       req.method === "POST" &&
-      url.pathname === "/api/tokens/create";
+      pathname === "/api/tokens/create";
 
     if (createTokenMatch) {
       const body = await readBody(req, ctx.config.maxBodySize) as {
@@ -417,7 +425,7 @@ export async function handleApiRequest(
       return true;
     }
 
-    if (req.method === "POST" && url.pathname === "/api/transactions") {
+    if (req.method === "POST" && pathname === "/api/transactions") {
       const body = await readBody(req, ctx.config.maxBodySize);
       if (!isTransaction(body)) {
         sendError(
@@ -441,7 +449,7 @@ export async function handleApiRequest(
       return true;
     }
 
-    const txHashMatch = url.pathname.match(
+    const txHashMatch = pathname.match(
       /^\/api\/transactions\/([0-9a-fA-F]{64})$/
     );
     if (req.method === "GET" && txHashMatch) {
@@ -456,7 +464,7 @@ export async function handleApiRequest(
       return true;
     }
 
-    const invalidTxMatch = url.pathname.match(/^\/api\/transactions\/([^/]+)$/);
+    const invalidTxMatch = pathname.match(/^\/api\/transactions\/([^/]+)$/);
     if (req.method === "GET" && invalidTxMatch) {
       const param = invalidTxMatch[1]!;
       if (/^[0-9a-fA-F]{40}$/.test(param)) {
@@ -477,7 +485,7 @@ export async function handleApiRequest(
       return true;
     }
 
-    if (req.method === "GET" && url.pathname === "/api/mempool") {
+    if (req.method === "GET" && pathname === "/api/mempool") {
       const limit = parsePositiveInt(url.searchParams.get("limit"), 50, 100);
       const offset = parsePositiveInt(
         url.searchParams.get("offset"),
@@ -498,7 +506,7 @@ export async function handleApiRequest(
       return true;
     }
 
-    if (req.method === "GET" && url.pathname === "/api/mempool/stats") {
+    if (req.method === "GET" && pathname === "/api/mempool/stats") {
       const totalFees = mempool.reduce((sum, tx) => sum + BigInt(tx.fee), 0n);
       const totalAmount = mempool.reduce(
         (sum, tx) => sum + BigInt(tx.amount),
@@ -514,7 +522,7 @@ export async function handleApiRequest(
       return true;
     }
 
-    const addressMatch = url.pathname.match(/^\/api\/address\/([0-9a-f]{40})$/);
+    const addressMatch = pathname.match(/^\/api\/address\/([0-9a-f]{40})$/);
     if (req.method === "GET" && addressMatch) {
       const address = addressMatch[1]!;
       sendSuccess(res, 200, {
@@ -527,7 +535,7 @@ export async function handleApiRequest(
       return true;
     }
 
-    const addressBalanceMatch = url.pathname.match(
+    const addressBalanceMatch = pathname.match(
       /^\/api\/address\/([0-9a-f]{40})\/balance$/
     );
     if (req.method === "GET" && addressBalanceMatch) {
@@ -540,7 +548,7 @@ export async function handleApiRequest(
       return true;
     }
 
-    const addressTxMatch = url.pathname.match(
+    const addressTxMatch = pathname.match(
       /^\/api\/address\/([0-9a-f]{40})\/transactions$/
     );
     if (req.method === "GET" && addressTxMatch) {
@@ -563,7 +571,7 @@ export async function handleApiRequest(
       return true;
     }
 
-    const invalidAddressMatch = url.pathname.match(/^\/api\/address\/([^/]+)/);
+    const invalidAddressMatch = pathname.match(/^\/api\/address\/([^/]+)/);
     if (req.method === "GET" && invalidAddressMatch) {
       sendError(res, 400, "INVALID_ADDRESS", "Invalid address format");
       return true;
@@ -577,7 +585,7 @@ export async function handleApiRequest(
 
     if (
       req.method === "POST" &&
-      (url.pathname === "/api/wallet/create" || url.pathname === "/api/wallet/generate")
+      (pathname === "/api/wallet/create" || pathname === "/api/wallet/generate")
     ) {
       const body = (await readBody(req, ctx.config.maxBodySize)) as { name?: string };
       const wallet = new NoshWallet();
