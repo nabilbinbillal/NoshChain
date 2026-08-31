@@ -295,7 +295,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <body>
 
 <div class="topbar">
-  <div class="logo"><div class="logo-icon"><span class="logo-n">N</span></div> NoshChain</div>
+  <div class="logo" onclick="showPage('dashboard')" style="cursor:pointer"><div class="logo-icon"><span class="logo-n">N</span></div> NoshChain</div>
   <div class="nav" id="nav">
     <button class="active" data-p="dashboard">Dashboard</button>
     <button data-p="blocks">Blocks</button>
@@ -589,10 +589,32 @@ function connectWS() {
 }
 connectWS();
 
-function showPage(p) {
+const PAGE_ROUTES = {
+  'dashboard': { path: '/', hash: '#dashboard', title: 'NoshChain Explorer | Blockchain & Node Dashboard' },
+  'blocks': { path: '/blocks', hash: '#blocks', title: 'Blocks | NoshChain Explorer' },
+  'txs': { path: '/transactions', hash: '#transactions', title: 'Transactions | NoshChain Explorer' },
+  'wallets': { path: '/wallets', hash: '#wallets', title: 'Wallets | NoshChain Explorer' },
+  'tokens': { path: '/tokens', hash: '#tokens', title: 'Tokens | NoshChain Explorer' },
+  'network': { path: '/network', hash: '#network', title: 'Network Stats | NoshChain Explorer' },
+  'api': { path: '/api-docs', hash: '#api-docs', title: 'API Reference | NoshChain Explorer' }
+};
+
+function showPage(p, updateUrl = true) {
+  if (!p || !document.getElementById('p-' + p)) p = 'dashboard';
   document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
   document.getElementById('p-' + p).classList.add('active');
   document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('active', b.dataset.p === p));
+
+  const route = PAGE_ROUTES[p] || PAGE_ROUTES['dashboard'];
+  document.title = route.title;
+
+  if (updateUrl) {
+    try {
+      history.pushState({ page: p }, route.title, route.path);
+    } catch (e) {
+      window.location.hash = route.hash;
+    }
+  }
 
   if (p === 'blocks') loadBlocks();
   if (p === 'txs') loadTxs();
@@ -600,6 +622,43 @@ function showPage(p) {
   if (p === 'network') loadNetwork();
   if (p === 'api') renderApiDocs();
 }
+
+function handleRoute() {
+  const path = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
+  const hash = window.location.hash.toLowerCase().replace(/^#\/?/, '');
+
+  if (path === '/blocks' || hash === 'blocks') {
+    showPage('blocks', false);
+  } else if (path === '/transactions' || path === '/txs' || hash === 'transactions' || hash === 'txs') {
+    showPage('txs', false);
+  } else if (path === '/wallets' || hash === 'wallets') {
+    showPage('wallets', false);
+  } else if (path === '/tokens' || hash === 'tokens') {
+    showPage('tokens', false);
+  } else if (path === '/network' || hash === 'network') {
+    showPage('network', false);
+  } else if (path === '/api-docs' || path === '/api-ref' || hash === 'api' || hash === 'api-docs') {
+    showPage('api', false);
+  } else if (path.startsWith('/block/') || hash.startsWith('block/')) {
+    const id = path.startsWith('/block/') ? path.split('/block/')[1] : hash.split('block/')[1];
+    showPage('blocks', false);
+    if (id) lookupTx(id);
+  } else if (path.startsWith('/tx/') || hash.startsWith('tx/')) {
+    const id = path.startsWith('/tx/') ? path.split('/tx/')[1] : hash.split('tx/')[1];
+    showPage('txs', false);
+    if (id) lookupTx(id);
+  } else if (path.startsWith('/address/') || hash.startsWith('address/')) {
+    const id = path.startsWith('/address/') ? path.split('/address/')[1] : hash.split('address/')[1];
+    showPage('dashboard', false);
+    if (id) lookupTx(id);
+  } else {
+    showPage('dashboard', false);
+  }
+}
+
+window.addEventListener('popstate', () => handleRoute());
+window.addEventListener('hashchange', () => handleRoute());
+
 document.querySelectorAll('.nav button').forEach(b => b.addEventListener('click', () => showPage(b.dataset.p)));
 
 function fmtHash(h) {
@@ -1358,6 +1417,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadDashboard();
   renderSavedWallets();
   renderApiDocs();
+  handleRoute();
   setInterval(() => {
     loadDashboard();
     const blocksActive = document.getElementById('p-blocks')?.classList.contains('active');
